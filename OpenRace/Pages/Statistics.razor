@@ -1,0 +1,42 @@
+@page "/stat"
+
+@using OpenRace.Features.Payment
+@using OpenRace.Entities
+@using OpenRace.Data.Ef
+@using OpenRace.Data.Specifications
+@using OpenRace.Features.Registration
+@using BlazorTable
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository MembersRepository
+@inject PaymentService PaymentService
+@inject RegistrationService RegistrationService
+@inject IToastService ToastService
+
+<h1>Статистика</h1>
+
+@if (Session.IsAuthorized())
+{
+
+}
+else
+{
+	<div>Требуется авторизация</div>
+}
+
+@code {
+
+	private record StatisticsData(Member[] AllMembers)
+	{
+		public int GetMen(int distance) => AllMembers.Count(it => it.Gender == Gender.Male && it.DistanceMt == distance);
+		public int GetWomen(int distance) => AllMembers.Count(it => it.Gender == Gender.Female && it.DistanceMt == distance);
+	}
+
+	StatisticsData _statisticsData = new(Array.Empty<Member>());
+
+
+
+}

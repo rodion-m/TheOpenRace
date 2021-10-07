@@ -1,0 +1,52 @@
+@page "/panel"
+
+@using OpenRace.Features.Payment
+@using OpenRace.Entities
+@using OpenRace.Data.Ef
+@using OpenRace.Data.Specifications
+@using OpenRace.Features.Registration
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository MembersRepository
+@inject PaymentService PaymentService
+@inject RegistrationService RegistrationService
+@inject IToastService ToastService
+
+<h1>Панель управления</h1>
+
+@if (Session.IsAuthorized())
+{
+	<EditForm Model="model" OnSubmit="SetMembershipPaid">
+		Email: <InputText @bind-Value="model.Email"></InputText>
+		<input class="btn btn-success" type="submit" value="Участие оплачено">
+	</EditForm>
+}
+else
+{
+	<h2>Требуется авторизация</h2>
+}
+
+@code {
+	private class Model
+	{
+		public string Email { get; set; } = "";
+	}
+
+	Model model = new();
+
+	private async Task SetMembershipPaid()
+	{
+		var member = await MembersRepository.FirstOrDefaultAsync(new MemberByEmail(model.Email));
+		if (member == null)
+		{
+			ToastService.ShowError("Участник с таким email не найден");
+			return;
+		}
+		await RegistrationService.SetMembershipPaid(member);
+		ToastService.ShowSuccess("ОК");
+	}
+
+}

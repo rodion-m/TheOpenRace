@@ -1,0 +1,72 @@
+@page "/purchase/{hash}"
+
+@using OpenRace.Features.Payment
+@using OpenRace.Entities
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject PaymentService PaymentService
+
+<h1>Благотварительный взнос</h1>
+
+@if (ErrorText == null)
+{
+	if (_member == null)
+	{
+		<div>Загрузка...</div>
+	} else if (_member!.Payment!.PaidAt != null)
+	{
+		<h2 style="color: green">Участие в забеге подтверждено!</h2>
+		<h3 style="color: green">Вы бежите под номером: @(_member.Number)</h3>
+	}
+	else
+	{
+		<h2 style="color: red">Не удалось провести платеж :(</h2>
+		<br/>
+		<button class="btn-info" @onclick="NavigateToPay">Перейти к оплате</button>
+	}
+}
+else
+{
+	<h2 style="color: red">Ошибка: @ErrorText</h2>
+}
+
+@code {
+	[Parameter]
+	public string? Hash { get; init; }
+	public string? ErrorText { get; set; }
+	private Member? _member { get; set; }
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await base.OnAfterRenderAsync(firstRender);
+		if(!firstRender) return;
+		if (Hash != null)
+		{
+			if (Guid.TryParse(Hash, out var paymentHash))
+			{
+				_member = await PaymentService.FindMemberByPaymentHash(paymentHash.ToString());
+				if (_member == null)
+				{
+					ErrorText = $"Не найден платеж: {Hash}";
+				}
+			}
+			else
+			{
+				ErrorText = $"Некорректное значение: {Hash}";
+			}
+		}
+		else
+		{
+			ErrorText = "Идентификатор платежа не задан";
+		}
+		StateHasChanged();
+	}
+	
+	private async Task NavigateToPay()
+	{
+		var redirectUri = await PaymentService.ReCreatePayment(_member!, NavigationManager.BaseUri);
+		NavigationManager.NavigateTo(redirectUri);
+	}
+
+}

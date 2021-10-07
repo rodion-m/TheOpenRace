@@ -1,0 +1,67 @@
+@page "/unsubscribe/{id}"
+
+@using OpenRace.Entities
+@using OpenRace.Data.Ef
+
+@inject NavigationManager NavigationManager
+@inject MembersRepository MembersRepo
+
+<h1>Отписка от рассылки</h1>
+
+@if (ResultText == null)
+{
+	<div>Загрузка...</div>
+}
+else
+{
+	if (!IsError)
+	{
+		<h2 style="color: green">Готово. Мы больше не будем присылать вам письма.</h2>
+	}
+	else
+	{
+		<h2 style="color: red">Ошибка: @ResultText</h2>
+	}
+}
+
+@code {
+	[Parameter]
+	public string? Id { get; init; }
+	public string? ResultText { get; set; }
+	public bool IsError;
+	private Member? _member { get; set; }
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await base.OnAfterRenderAsync(firstRender);
+		if(!firstRender) return;
+		if (Id != null)
+		{
+			if (Guid.TryParse(Id, out var memberId))
+			{
+				_member = await MembersRepo.GetById(memberId);
+				if (_member != null)
+				{
+					_member.Subscribed = false;
+					await MembersRepo.UpdateAsync(_member);
+					ResultText = "ОК";
+				}
+				else
+				{
+					ResultText = $"Не найден пользователь: {Id}";
+					IsError = true;
+				}
+			}
+			else
+			{
+				ResultText = $"Некорректный идентификатор: {Id}";
+			}
+		}
+		else
+		{
+			ResultText = "Индектификатор не задан";
+		}
+		StateHasChanged();
+	}
+
+}

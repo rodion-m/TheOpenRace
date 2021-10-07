@@ -1,0 +1,67 @@
+@page "/auth"
+
+@using OpenRace.Features.Payment
+@using OpenRace.Entities
+@using OpenRace.Data.Ef
+@using OpenRace.Data.Specifications
+@using OpenRace.Features.Auth
+@using OpenRace.Features.Registration
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository MembersRepository
+@inject PaymentService PaymentService
+@inject RegistrationService RegistrationService
+@inject IToastService ToastService
+
+<h1>Авторизация</h1>
+
+@if (Session.IsAuthorized())
+{
+	<h2>Вы авторизованы как @(Session.UserName)</h2>
+	<button class="btn-danger" @onclick="Logout">Выход</button>
+} else {
+
+	<EditForm Model="model" OnSubmit="TryLogin">
+		Пользователь: <InputText @bind-Value="model.UserName"></InputText>
+		<br/>
+		Пароль: <InputText @bind-Value="model.Password"></InputText>
+		<br/>
+		<input class="btn btn-success" type="submit" value="Войти">
+	</EditForm>
+}
+
+@code {
+	private class Model
+	{
+		public string UserName { get; set; } = "";
+		public string Password { get; set; } = "";
+	}
+
+	Model model = new();
+
+	private async Task TryLogin()
+	{
+		var session = new Session(model.UserName, model.Password);
+		if (session.IsAuthorized())
+		{
+			await SessionService.Set(session);
+			ToastService.ShowSuccess("Успешная авторизация");
+			NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+		}
+		else
+		{
+			ToastService.ShowError("Пользователь или пароль не совпадают");
+		}
+	}
+
+	private async Task Logout()
+	{
+		await SessionService.Reset();
+		ToastService.ShowSuccess("Вы вышли из системы");
+		NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+	}
+
+}

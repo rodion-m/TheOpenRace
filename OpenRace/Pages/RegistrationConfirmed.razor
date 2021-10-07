@@ -1,0 +1,60 @@
+@page "/confirmed/{id}"
+
+@using OpenRace.Entities
+@using OpenRace.Data.Ef
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository _membersRepo
+
+<h1>Участие в забеге</h1>
+
+@if (ErrorText == null)
+{
+	if (_member == null)
+	{
+		<div>Загрузка...</div>
+	} else
+	{
+		<h2 style="color: green">Участие в забеге подтверждено!</h2>
+		<h3 style="color: green">Вы бежите под номером: @(_member.Number)</h3>
+	}
+}
+else
+{
+	<h2 style="color: red">Ошибка: @ErrorText</h2>
+}
+
+@code {
+	[Parameter]
+	public string? Id { get; init; }
+	public string? ErrorText { get; set; }
+	private Member? _member { get; set; }
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await base.OnAfterRenderAsync(firstRender);
+		if(!firstRender) return;
+		if (Id != null)
+		{
+			if (Guid.TryParse(Id, out var memberId))
+			{
+				_member = await _membersRepo.GetByIdOrNull(memberId);
+				if (_member == null)
+				{
+					ErrorText = $"Участник не найден: {Id}";
+				}
+			}
+			else
+			{
+				ErrorText = $"Некорректное значение: {Id}";
+			}
+		}
+		else
+		{
+			ErrorText = "Id участника не задан";
+		}
+		StateHasChanged();
+	}
+
+}

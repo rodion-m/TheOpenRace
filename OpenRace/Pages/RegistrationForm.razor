@@ -1,0 +1,86 @@
+@page "/registration"
+@using Microsoft.Extensions.Logging
+@using OpenRace.Features.Registration
+
+@inject NavigationManager NavigationManager
+@inject RegistrationService RegistrationService
+@inject ILogger<RegistrationForm> Logger
+@inject IToastService ToastService
+
+<h2>Регистрация на забег в поддержку строительства храма святого князя Владимира в Новогиреево</h2>
+<h5>ПО ВСЕМ ВОПРОСАМ ОБРАЩАТЬСЯ ПО ТЕЛЕФОНУ: <a href="tel:+79645522761">8-964-552-27-61</a> Дмитрий</h5>
+
+<EditForm Model="@model" OnValidSubmit="@HandleValidSubmit">
+	<DataAnnotationsValidator/>
+
+	<label>
+		Имя: <InputText @bind-Value="model.FirstName"></InputText>
+	</label>
+	<br/>
+	<label>
+		Фамилия: <InputText @bind-Value="model.LastName"></InputText>
+	</label>
+	<br/>
+	<label>
+		Отчество: <InputText @bind-Value="model.PatronymicName"></InputText>
+	</label>
+	<br/>
+	<label>
+		Возраст: <InputNumber @bind-Value="model.Age"></InputNumber>
+	</label>
+	<p>
+		<label>
+			Вы:
+			<InputSelect @bind-Value="model.Gender">
+				<option value="">Выбор</option>
+				<option value="Male">Мужчина</option>
+				<option value="Female">Женщина</option>
+			</InputSelect>
+		</label>
+	</p>
+	<br/>
+	<label>Email: <InputText @bind-Value="model.Email"></InputText></label>
+	<br/>
+	<label>Phone: <InputText @bind-Value="model.Phone"></InputText></label>
+	<p>
+		<label>
+			Дистанция:
+			<br/>
+			<InputRadioGroup  @bind-Value="model.Distance">
+				@foreach (var (distance, caption) in _distances)
+				{
+					var id = $"distance_{distance}";
+					<InputRadio id="@id" Value="@distance.ToString()"/>
+					<label for="@id">@caption</label>
+					<br/>
+				}
+			</InputRadioGroup>
+		</label>
+	</p>
+
+	<ValidationSummary/>
+	<input class="btn btn-primary" type="submit" value="Отправить">
+</EditForm>
+
+@code {
+
+	private readonly (int distance, string caption)[] _distances = new[]
+	{
+		(1, "1 километр (для детей): \"семейная\""),
+		(2, "2 километра: \"я попробую\""),
+		(5, "5 километров: \"я смогу\""),
+		(10, "10 километров: \"профи\""),
+	};
+
+	public const string Identifier = "registration";
+
+	private readonly RegistrationModel model = new();
+
+	private async Task HandleValidSubmit()
+	{
+		ToastService.ShowInfo("Регистрация...");
+		var redirectUri = await RegistrationService.RegisterAndCreatePayment(model, NavigationManager.BaseUri);
+		NavigationManager.NavigateTo(redirectUri);
+	}
+
+}

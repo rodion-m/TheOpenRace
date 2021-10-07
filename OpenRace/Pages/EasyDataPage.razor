@@ -1,0 +1,42 @@
+﻿@page "/easydata/{entity?}"
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+@implements IAsyncDisposable
+
+@inject IJSRuntime JSRuntime
+
+@if (Session.IsAuthorized())
+{
+    <div class="container">
+        <div id="EasyDataContainer"></div>
+    </div>
+}
+else
+{
+    <div>Требуется авторизация</div>
+}
+
+@code {
+    [Parameter]
+    public string? Entity { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) {
+            await JSRuntime.InvokeVoidAsync("runEasyData");
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private bool _disposed;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (!_disposed)
+        {
+            _disposed = true;
+            await JSRuntime.InvokeVoidAsync("stopEasyData");
+        }
+    }
+
+}

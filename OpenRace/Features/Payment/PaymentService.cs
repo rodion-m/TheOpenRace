@@ -1,0 +1,93 @@
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+using NodaTime;
+using OpenRace.Data.Ef;
+using OpenRace.Data.Specifications;
+using OpenRace.Entities;
+using OpenRace.Data;
+using Yandex.Checkout.V3;
+
+namespace OpenRace.Features.Payment
+{
+    public class PaymentService
+    {
+        private readonly MembersRepository _members;
+        private readonly AsyncClient _asyncClient;
+
+        public PaymentService(
+            YouKassaSecrets youKassaSecrets, MembersRepository members)
+        {
+            _members = members;
+            var client = new Client(youKassaSecrets.ShopId, youKassaSecrets.SecretKey);
+            _asyncClient = client.MakeAsync();
+        }
+
+        public Yandex.Checkout.V3.Payment DecodeWebhookRequest(
+            string requestMethod, string requestContentType, Stream requestBody)
+        {
+            var message = Client.ParseMessage(requestMethod, requestContentType, requestBody);
+            if (message == null)
+            {
+                throw new NullReferenceException(nameof(message));
+            }
+            var payment = message.Object;
+            return payment;
+            
+            // if (message?.Event == Event.PaymentWaitingForCapture && payment.Paid)
+            // {
+            //     Log($"Got message: payment.id={payment.Id}, payment.paid={payment.Paid}");
+            //
+            //     // 4. Подтвердите готовность принять платеж
+            //     await _asyncClient.CapturePaymentAsync(payment.Id);
+            // }
+        }
+
+
+
+        public async Task<(Entities.Payment payment, string redirectUri)> CreatePayment(
+            decimal amount, string hash, string hostUrl)
+        {
+            var newPayment = new NewPayment
+            {
+                Amount = new Amount { Value = amount },
+                Confirmation = new Confirmation 
+                { 
+                    Type = ConfirmationType.Redirect,
+                    ReturnUrl = CreateReturnPageUri(hash, hostUrl)
+                },
+                Capture = true,
+            };
+            var payment = await _asyncClient.CreatePaymentAsync(newPayment);
+
+            var racePayment = new Entities.Payment(payment.Id, payment.Amount.Value, hash);
+            return (racePayment, payment.Confirmation.ConfirmationUrl);
+        }
+
+        public string CreateReturnPageUri(string hash, string hostUrl)
+        {
+            return $"{hostUrl}purchase/{hash}";
+        }
+
+        public async Task<string> ReCreatePayment(Member member, string hostUrl)
+        {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            var hash = Guid.NewGuid().ToString();
+            var (payment, redirectUri) = await CreatePayment(
+                500, //model.Donation
+                hash,
+                hostUrl
+            );
+            member.Payment = payment;
+            await _members.UpdateAsync(member);
+            return redirectUri;
+        }
+
+        public async Task<Member?> FindMemberByPaymentHash(string paymentHash)
+        {
+            if (paymentHash == null) throw new ArgumentNullException(nameof(paymentHash));
+            var member = await _members.FirstOrDefaultAsync(new MemberByPaymentHash(paymentHash));
+            return member;
+        }
+    }
+}
