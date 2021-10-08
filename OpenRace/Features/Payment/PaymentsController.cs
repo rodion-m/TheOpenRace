@@ -17,14 +17,16 @@ namespace OpenRace.Features.Payment
         private readonly ILogger<PaymentsController> _logger;
         private readonly IEmailService _emailService;
         private readonly RegistrationService _registrationService;
+        private readonly AppConfig _appConfig;
 
         public PaymentsController(
-            PaymentService paymentService, ILogger<PaymentsController> logger, IEmailService emailService, RegistrationService registrationService)
+            PaymentService paymentService, ILogger<PaymentsController> logger, IEmailService emailService, RegistrationService registrationService, AppConfig appConfig)
         {
             _paymentService = paymentService;
             _logger = logger;
             _emailService = emailService;
             _registrationService = registrationService;
+            _appConfig = appConfig;
         }
         
         [HttpPost("Notify")]
@@ -43,7 +45,7 @@ namespace OpenRace.Features.Payment
             if (payment.Paid)
             {
                 var member = await _registrationService.SetMembershipPaid(payment.Id);
-                await _emailService.SendMembershipConfirmedMessage(member);
+                await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
             }
             else
             {

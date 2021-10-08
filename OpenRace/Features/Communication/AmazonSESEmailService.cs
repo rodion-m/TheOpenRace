@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon;
@@ -68,11 +69,11 @@ namespace OpenRace.Features.Communication
             }
         }
 
-        public Task SendMembershipConfirmedMessage(Member member)
+        public Task SendMembershipConfirmedMessage(Member member, CultureInfo cultureInfo)
         {
             var html = _templates.GetTemplate1Html(
                 "Участие в забеге подтверждено!", 
-                $"Дата и время: {_appConfig.RaceDateTimeAsString}", 
+                $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
                 $"Номер участника: {member.Number}",
                 "Ждем вас!",
                 _appConfig.SiteUrl,

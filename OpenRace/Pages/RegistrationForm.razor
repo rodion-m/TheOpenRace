@@ -46,7 +46,7 @@
 		<label>
 			Дистанция:
 			<br/>
-			<InputRadioGroup  @bind-Value="model.Distance">
+			<InputRadioGroup  @bind-Value="model.DistanceKm">
 				@foreach (var (distance, caption) in _distances)
 				{
 					var id = $"distance_{distance}";

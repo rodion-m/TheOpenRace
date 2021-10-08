@@ -10,10 +10,11 @@ namespace OpenRace
         ZonedDateTime RaceDateTime,
         string SenderName,
         string SenderEmailAddress,
+        CultureInfo DefaultCultureInfo,
         AppConfig.DistanceInfo[] AvailableDistances)
     {
-        public string RaceDateTimeAsString
-            => RaceDateTime.ToString("d MMMM yyyy 'г.' HH:mm", CultureInfo.CurrentUICulture);
+        public string GetRaceDateTimeAsString(CultureInfo? cultureInfo = null) =>
+            RaceDateTime.ToString("d MMMM yyyy 'г.' HH:mm", cultureInfo ?? CultureInfo.CurrentUICulture);
 
         public static readonly AppConfig Current = new(
             "https://svzabeg.ru/",
@@ -24,10 +25,11 @@ namespace OpenRace
                 Offset.FromHours(3)),
             "Храм св. Владимира",
             "info@svzabeg.ru",
+            DefaultCultureInfo: new CultureInfo("ru"),
             AvailableDistances: new DistanceInfo[]
             {
                 new(1000, 1, Color.Green),
-                new(3000, 31, Color.Orange),
+                new(2000, 31, Color.Orange),
                 new(5000, 61, Color.DodgerBlue),
                 new(10_000, 101, Color.Red),
             }

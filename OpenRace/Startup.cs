@@ -1,6 +1,7 @@
 using System;
 using Blazored.Toast;
 using BlazorTable;
+using Coravel;
 using EasyData.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -63,6 +64,8 @@ namespace OpenRace
             );
 
             services.AddDatabaseDeveloperPageExceptionFilter();
+            services.AddQueue();
+            services.AddCache();
 
             services.AddSingleton<IClock>(SystemClock.Instance);
             services.AddSingleton(AppConfig.Current);

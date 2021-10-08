@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using OpenRace.Entities;
 
@@ -28,7 +29,7 @@ namespace OpenRace.Features.Registration
 
         [Required]
         [Display(Name = "Возраст")]
-        [Range(7, 120)]
+        //[Range(7, 120)]
         [FromForm(Name = "age")] 
         public int Age { get; set; }
         
@@ -51,7 +52,8 @@ namespace OpenRace.Features.Registration
         [Required]
         [Display(Name = "Дистанция")]
         [FromForm(Name = "distance")]
-        public string? Distance { get; set; }
+        [Range(0, int.MaxValue)]
+        public string? DistanceKm { get; set; }
 
         [Display(Name = "Как узнали о забеге")]
         [FromForm(Name = "referer")]

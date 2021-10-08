@@ -34,7 +34,7 @@ namespace OpenRace.Features.Registration
 
             if (existedMember != null)
             {
-                member = member with { Id = existedMember.Id };
+                member = member with { Id = existedMember.Id, Number = existedMember.Number };
                 await _members.DeleteAsync(existedMember);
             }
 
@@ -78,7 +78,7 @@ namespace OpenRace.Features.Registration
                 phone,
                 model.Age,
                 Enum.Parse<Gender>(model.Gender!),
-                int.Parse(model.Distance!) * 1000,
+                int.Parse(model.DistanceKm!) * 1000,
                 model.Referer
             )
             {
