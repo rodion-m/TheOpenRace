@@ -35,11 +35,11 @@
 			</tr>
 			</thead>
 			<tbody>
-			@foreach (var distance in AppConfig.AvailableDistances)
+			@foreach (var distance in AppConfig.AvailableDistances.Cast<int?>().Append(null))
 			{
-				var distanceKm = distance / 1000;
+				var distanceS = distance != null ? $"{distance / 1000} км." : "Всего";
 				<tr>
-					<th scope="row">@distanceKm км.</th>
+					<th scope="row">@distanceS</th>
 					<td>@(_statisticsData.Count(distance))</td>
 					<td>@_statisticsData.Count(distance, children: true)</td>
 					<td>@_statisticsData.Count(distance, Gender.Male)</td>
@@ -95,9 +95,9 @@ else
 
 	private record StatisticsData(List<Member> AllMembers)
 	{
-		public int Count(int distance, Gender? gender = null, bool? children = null)
+		public int Count(int? distance, Gender? gender = null, bool? children = null)
 		{
-			return AllMembers.Count(it => it.DistanceMt == distance
+			return AllMembers.Count(it => (distance == null || it.DistanceMt == distance)
 			                              && (gender == null || it.Gender == gender)
 			                              && (children == null || it.IsChild() == children)
 				);
