@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 using NodaTime;
@@ -16,12 +17,14 @@ namespace OpenRace.Features.Registration
         private readonly MembersRepository _members;
         private readonly PaymentService _paymentService;
         private readonly IClock _clock;
+        private readonly AppConfig _appConfig;
 
-        public RegistrationService(MembersRepository members, PaymentService paymentService, IClock clock)
+        public RegistrationService(MembersRepository members, PaymentService paymentService, IClock clock, AppConfig appConfig)
         {
             _members = members;
             _paymentService = paymentService;
             _clock = clock;
+            _appConfig = appConfig;
         }
 
         public async Task<(RegistrationResult, Member)> RegisterOrUpdate(Member member)
@@ -58,7 +61,7 @@ namespace OpenRace.Features.Registration
             using var locking = await _memberNumberMutex.LockAsync();
             if (payment == null)
             {
-                member.Number = await GetNextMemberNumber();
+                member.Number = await GetNewMemberNumber(member);
             }
 
             return await RegisterOrUpdate(member);
@@ -91,7 +94,7 @@ namespace OpenRace.Features.Registration
             return member;
         }
 
-        private readonly AsyncLock _memberNumberMutex = new AsyncLock();
+        private readonly AsyncLock _memberNumberMutex = new();
 
         public async Task<Member> SetMembershipPaid(Member member, bool assignNumberIfItsNot = true)
         {
@@ -99,7 +102,7 @@ namespace OpenRace.Features.Registration
             member.Payment!.PaidAt = _clock.GetCurrentInstant();
             if (assignNumberIfItsNot && member.Number == null)
             {
-                member.Number = await GetNextMemberNumber();
+                member.Number = await GetNewMemberNumber(member);
             }
 
             await _members.UpdateAsync(member);
@@ -108,15 +111,17 @@ namespace OpenRace.Features.Registration
 
         public async Task AssignNewMemberNumber(Member member)
         {
-            member.Number = await GetNextMemberNumber();
+            member.Number = await GetNewMemberNumber(member);
             await _members.UpdateAsync(member);
         }
         
         [Pure]
-        private async Task<int> GetNextMemberNumber()
+        private async Task<int> GetNewMemberNumber(Member member)
         {
-            var lastMember = await _members.GetLastPaidMemberOrNull();
-            return lastMember != null ? lastMember.Number.GetValueOrDefault() + 1 : 1;
+            var lastMember = await _members.GetLastMemberNumber(member.Distance);
+            return lastMember != null 
+                ? lastMember.Number.GetValueOrDefault() + 1 
+                : _appConfig.AvailableDistances.First(it => it.DistanceMt == member.Distance).BeginsWithNumber;
         }
     }
 

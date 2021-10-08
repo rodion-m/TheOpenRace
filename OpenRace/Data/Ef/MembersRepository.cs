@@ -29,6 +29,14 @@ namespace OpenRace.Data.Ef
                 .FirstOrDefaultAsync()!;
         }
         
+        public Task<Member?> GetLastMemberNumber(int distance)
+        {
+            return Queryable.Where(_dbContext.Members, it => it.Distance == distance && it.Number != null)
+                .OrderByDescending(it => it.Number)
+                .Include(it => it.Payment)
+                .FirstOrDefaultAsync()!;
+        }
+        
         public override Task<Member> GetById(Guid id, CancellationToken cancellationToken = default)
         {
             return _dbContext.Members

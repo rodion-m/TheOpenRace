@@ -15,7 +15,7 @@ namespace OpenRace.Entities
             string? phone, 
             int age, 
             Gender gender, 
-            int distanceMt, 
+            int distance, 
             string? referer)
         {
             Id = id;
@@ -25,7 +25,7 @@ namespace OpenRace.Entities
             Phone = phone;
             Age = age;
             Gender = gender;
-            DistanceMt = distanceMt;
+            Distance = distance;
             Referer = referer;
         }
 
@@ -38,7 +38,7 @@ namespace OpenRace.Entities
         public Gender Gender { get; set; }
         
         /// <summary> Дистанция в метрах </summary>
-        public int DistanceMt { get; set; }
+        public int Distance { get; set; }
         
         public string? Referer { get; set; }
 
@@ -54,7 +54,7 @@ namespace OpenRace.Entities
 
         public bool IsChild()
         {
-            return Age < 14;
+            return Age < 17;
         }
     }
     

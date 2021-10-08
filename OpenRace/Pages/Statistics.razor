@@ -6,6 +6,8 @@
 @using OpenRace.Data.Specifications
 @using OpenRace.Features.Registration
 @using BlazorTable
+@using System.Drawing
+@using Amazon.SimpleEmail.Model
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 
@@ -35,11 +37,13 @@
 			</tr>
 			</thead>
 			<tbody>
-			@foreach (var distance in AppConfig.AvailableDistances.Cast<int?>().Append(null))
+			@foreach (var distanceInfo in AppConfig.AvailableDistances.Cast<AppConfig.DistanceInfo?>().Append(null))
 			{
+				var distance = distanceInfo?.DistanceMt;
 				var distanceS = distance != null ? $"{distance / 1000} км." : "Всего";
+				var color = ColorTranslator.ToHtml(distanceInfo?.Color ?? Color.White);
 				<tr>
-					<th scope="row">@distanceS</th>
+					<th scope="row" style="background-color: @color">@distanceS</th>
 					<td>@(_statisticsData.Count(distance))</td>
 					<td>@_statisticsData.Count(distance, children: true)</td>
 					<td>@_statisticsData.Count(distance, Gender.Male)</td>
@@ -69,9 +73,9 @@
 					<a href="tel:@context.Phone">@context.Phone</a>
 				</Template>
 			</Column>
-			<Column TableItem="Member" Title="Дистанция" Field="@(x => x.DistanceMt)" Sortable="true" Filterable="true" Width="10%" Format="N0">
+			<Column TableItem="Member" Title="Дистанция (км)" Field="@(x => x.Distance)" Sortable="true" Filterable="true" Width="10%" Format="N0">
 				<Template>
-					<span>@(context.DistanceMt / 1000)</span>
+					<span>@(context.Distance / 1000)</span>
 				</Template>
 			</Column>
 			<Column TableItem="Member" Title="Возраст" Field="@(x => x.Age)" Sortable="true" Filterable="true" Width="10%"/>
@@ -102,7 +106,7 @@ else
 	{
 		public int Count(int? distance, Gender? gender = null, bool? children = null)
 		{
-			return AllMembers.Count(it => (distance == null || it.DistanceMt == distance)
+			return AllMembers.Count(it => (distance == null || it.Distance == distance)
 			                              && (gender == null || it.Gender == gender)
 			                              && (children == null || it.IsChild() == children)
 				);

@@ -14,27 +14,32 @@
 	if (_member == null)
 	{
 		<div>Загрузка...</div>
-	} else
+	}
+	else
 	{
 		<h2 style="color: green">Участие в забеге подтверждено!</h2>
 		<h3 style="color: green">Вы бежите под номером: @(_member.Number)</h3>
+		<button class="btn btn-primary" @onclick="OpenSite">Вернуться на сайт</button>
 	}
+}
 }
 else
 {
-	<h2 style="color: red">Ошибка: @ErrorText</h2>
+<h2 style="color: red">Ошибка: @ErrorText</h2>
 }
 
 @code {
+
 	[Parameter]
 	public string? Id { get; init; }
+
 	public string? ErrorText { get; set; }
 	private Member? _member { get; set; }
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		await base.OnAfterRenderAsync(firstRender);
-		if(!firstRender) return;
+		if (!firstRender) return;
 		if (Id != null)
 		{
 			if (Guid.TryParse(Id, out var memberId))
@@ -55,6 +60,11 @@ else
 			ErrorText = "Id участника не задан";
 		}
 		StateHasChanged();
+	}
+
+	void OpenSite()
+	{
+		NavigationManager.NavigateTo(AppConfig.SiteUrl);
 	}
 
 }
