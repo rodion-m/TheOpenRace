@@ -23,8 +23,7 @@ namespace OpenRace.Data.Ef
 
         public Task<Member?> GetLastPaidMemberOrNull()
         {
-            return _dbContext.Members
-                .Where(it => it.Number != null)
+            return Queryable.Where(_dbContext.Members, it => it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync()!;

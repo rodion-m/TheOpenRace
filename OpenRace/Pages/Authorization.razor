@@ -20,16 +20,18 @@
 
 @if (Session.IsAuthorized())
 {
-	<h2>Вы авторизованы как @(Session.UserName)</h2>
+	<h2 style="color: green">Вы авторизованы как @(Session.UserName)</h2>
 	<button class="btn-danger" @onclick="Logout">Выход</button>
 } else {
 
 	<EditForm Model="model" OnSubmit="TryLogin">
-		Пользователь: <InputText @bind-Value="model.UserName"></InputText>
-		<br/>
-		Пароль: <InputText @bind-Value="model.Password"></InputText>
-		<br/>
-		<input class="btn btn-success" type="submit" value="Войти">
+		<table>
+			<tr><td>Пользователь:</td> <td><InputText @bind-Value="model.UserName"></InputText></td></tr>
+			<tr><td>Пароль:</td> <td><InputText @bind-Value="model.Password"></InputText></td></tr>
+			<tr><td colspan="2"><input class="btn btn-success" type="submit" value="Войти"></td></tr>
+		</table>
+		
+		
 	</EditForm>
 }
 

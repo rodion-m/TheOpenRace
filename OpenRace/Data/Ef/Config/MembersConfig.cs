@@ -18,14 +18,9 @@ namespace OpenRace.Data.Ef.Config
             builder.HasIndex(ci => ci.Email);
             builder.HasIndex(ci => ci.FullName);
 
-            // builder.Property(ci => ci.Id)
-            //     .UseHiLo("member_hilo")
-            //     .IsRequired();
-
             builder.Property(cb => cb.Email)
                 .IsRequired()
                 .HasMaxLength(100);
-            //builder.Property(cb => cb.Payment).HasColumnType(jsonb);
         }
     }
 }

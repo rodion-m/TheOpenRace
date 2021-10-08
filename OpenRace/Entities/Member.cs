@@ -51,6 +51,11 @@ namespace OpenRace.Entities
         //https://entityframeworkcore.com/knowledge-base/53063181/ef-core-database-specific-columns-to-nested-object
         [MetaEntityAttr(Enabled = false)]
         public Payment? Payment { get; set; }
+
+        public bool IsChild()
+        {
+            return Age < 14;
+        }
     }
     
     public enum Gender
