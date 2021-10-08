@@ -56,7 +56,8 @@
 		</h3>
 		<hr/>
 		<h2>Список участников</h2>
-		<Table TableItem="Member" Items="_statisticsData.AllMembers" PageSize="15">
+		<Table TableItem="Member" Items="_statisticsData.AllMembers" PageSize="15" ColumnReorder="true">
+			<Column TableItem="Member" Title="№" Field="@(x => x.Number)" Sortable="true" Filterable="true" Width="5%"/>
 			<Column TableItem="Member" Title="Имя" Field="@(x => x.FullName)" Sortable="true" Filterable="true" Width="30%"/>
 			<Column TableItem="Member" Title="Email" Field="@(x => x.Email)" Sortable="true" Filterable="true" Width="20%">
 				<Template>
@@ -68,8 +69,13 @@
 					<a href="tel:@context.Phone">@context.Phone</a>
 				</Template>
 			</Column>
-			<Column TableItem="Member" Title="Дистанция" Field="@(x => x.DistanceMt)" Sortable="true" Filterable="true" Width="10%"/>
-			<Column TableItem="Member" Title="Пол" Field="@(x => x.Gender)" Sortable="true" Filterable="true" Width="10%">
+			<Column TableItem="Member" Title="Дистанция" Field="@(x => x.DistanceMt)" Sortable="true" Filterable="true" Width="10%" Format="N0">
+				<Template>
+					<span>@(context.DistanceMt / 1000)</span>
+				</Template>
+			</Column>
+			<Column TableItem="Member" Title="Возраст" Field="@(x => x.Age)" Sortable="true" Filterable="true" Width="10%"/>
+			<Column TableItem="Member" Title="Пол" Field="@(x => x.Gender)" Sortable="true" Filterable="true" Width="5%">
 				<Template>
 					@{
 						var gen = context.Gender == Gender.Male ? "М" : "Ж";
@@ -77,7 +83,6 @@
 					}
 				</Template>
 			</Column>
-			<Column TableItem="Member" Title="Номер" Field="@(x => x.Number)" Sortable="true" Filterable="true" Width="10%"/>
 			<Pager ShowPageNumber="true" ShowTotalCount="true"/>
 		</Table>
 	}
