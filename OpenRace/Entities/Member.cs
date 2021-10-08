@@ -30,6 +30,7 @@ namespace OpenRace.Entities
         }
 
         public Guid Id { get; set; }
+        [MetaEntityAttr(Enabled = false)]
         public Instant CreatedAt { get; set; }
         public string FullName { get; set; }
         public string Email { get; set; }

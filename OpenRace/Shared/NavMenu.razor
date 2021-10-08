@@ -11,7 +11,7 @@
 	<ul class="nav flex-column">
 		<li class="nav-item px-3">
 			<NavLink class="nav-link" href="@(AppConfig.SiteUrl)" Match="NavLinkMatch.All">
-				<span class="oi oi-home" aria-hidden="true"></span> Главная
+				<span class="oi oi-home" aria-hidden="true"></span> Сайт
 			</NavLink>
 		</li>
 		
@@ -20,16 +20,16 @@
 		@* 		<span class="oi oi-info" aria-hidden="true"></span> Информация *@
 		@* 	</NavLink> *@
 		@* </li> *@
-		<li class="nav-item px-3">
-			<NavLink class="nav-link" href="@(AppConfig.SiteUrl)">
-				<span class="oi oi-plus" aria-hidden="true"></span> Регистрация
-			</NavLink>
-		</li>
-		<li class="nav-item px-3">
-        	<NavLink class="nav-link" href="contacts">
-        		<span class="oi oi-phone" aria-hidden="true"></span> Контакты
-        	</NavLink>
-        </li>
+		@* <li class="nav-item px-3"> *@
+		@* 	<NavLink class="nav-link" href="@(AppConfig.SiteUrl)"> *@
+		@* 		<span class="oi oi-plus" aria-hidden="true"></span> Регистрация *@
+		@* 	</NavLink> *@
+		@* </li> *@
+		@* <li class="nav-item px-3"> *@
+  @*       	<NavLink class="nav-link" href="contacts"> *@
+  @*       		<span class="oi oi-phone" aria-hidden="true"></span> Контакты *@
+  @*       	</NavLink> *@
+  @*       </li> *@
 		<li class="nav-item px-3">
         	<NavLink class="nav-link" href="auth">
         		<span class="oi oi-account-login" aria-hidden="true"></span> Авторизация
@@ -46,9 +46,9 @@
         	</NavLink>
         </li>
 		<li class="nav-item px-3">
-			@* <NavLink class="nav-link" href="easydata"> *@
-			@* 	<span class="oi oi-list-rich" aria-hidden="true"></span> Редактор *@
-			@* </NavLink> *@
+			<NavLink class="nav-link" href="easydata">
+				<span class="oi oi-list-rich" aria-hidden="true"></span> Редактор
+			</NavLink>
 		</li>
 	</ul>
 </div>
