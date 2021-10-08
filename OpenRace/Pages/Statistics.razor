@@ -37,6 +37,7 @@
 			</tr>
 			</thead>
 			<tbody>
+			@* ReSharper disable once RedundantEnumerableCastCall *@
 			@foreach (var distanceInfo in AppConfig.AvailableDistances.Cast<AppConfig.DistanceInfo?>().Append(null))
 			{
 				var distance = distanceInfo?.DistanceMt;
