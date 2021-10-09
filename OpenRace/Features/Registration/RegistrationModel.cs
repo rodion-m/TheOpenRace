@@ -16,15 +16,18 @@ namespace OpenRace.Features.Registration
         [Required]
         [Display(Name = "Имя")]
         [FromForm(Name = "first_name")]
+        [MaxLength(50)]
         public string? FirstName { get; set; }
 
         [Required]
         [Display(Name = "Фамилия")]
         [FromForm(Name = "last_name")]
+        [MaxLength(50)]
         public string? LastName { get; set; }
 
         [Display(Name = "Отчество")]
         [FromForm(Name = "patronymic_name")]
+        [MaxLength(50)]
         public string? PatronymicName { get; set; }
 
         [Required]
@@ -41,12 +44,14 @@ namespace OpenRace.Features.Registration
         [Required]
         [Display(Name = "Email")]
         [EmailValidation.Email]
-        [FromForm(Name = "email")] 
+        [FromForm(Name = "email")]
+        [MaxLength(50)]
         public string? Email { get; set; }
         
         [Display(Name = "Телефон")]
         //[Phone]
-        [FromForm(Name = "phone")] 
+        [FromForm(Name = "phone")]
+        [MaxLength(50)]
         public string? Phone { get; set; }
         
         [Required]
@@ -57,6 +62,7 @@ namespace OpenRace.Features.Registration
 
         [Display(Name = "Как узнали о забеге")]
         [FromForm(Name = "referer")]
+        [MaxLength(200)]
         public string? Referer { get; set; }
     }
 }

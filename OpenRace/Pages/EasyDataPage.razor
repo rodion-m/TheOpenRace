@@ -1,8 +1,10 @@
 ﻿@page "/easydata/{entity?}"
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
+@using Microsoft.Extensions.Logging
 @implements IAsyncDisposable
 
+@inject ILogger<EasyDataPage> _logger
 @inject IJSRuntime JSRuntime
 
 @if (Session.IsAuthorized())
@@ -20,12 +22,15 @@ else
     [Parameter]
     public string? Entity { get; set; }
 
+    private bool _firstRenderComplete;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("runEasyData");
+            _firstRenderComplete = true;
         }
     }
 
@@ -33,10 +38,17 @@ else
 
     public async ValueTask DisposeAsync()
     {
-        if (!_disposed)
+        if (_firstRenderComplete && !_disposed)
         {
             _disposed = true;
-            await JSRuntime.InvokeVoidAsync("stopEasyData");
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("stopEasyData");
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, $"Exception inside {nameof(DisposeAsync)}");
+            }
         }
     }
 
