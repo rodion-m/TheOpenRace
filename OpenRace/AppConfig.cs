@@ -37,6 +37,9 @@ namespace OpenRace
 
         public string GetLink(string location) => $"{Hostname}{location}";
 
-        public record DistanceInfo(int DistanceMt, int BeginsWithNumber, Color Color);
+        public record DistanceInfo(int DistanceMt, int BeginsWithNumber, Color Color, int OneLapDistance = 1000)
+        {
+            public int LapsCount => DistanceMt / OneLapDistance;
+        }
     }
 }

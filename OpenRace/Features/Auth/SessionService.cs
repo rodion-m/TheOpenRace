@@ -24,6 +24,11 @@ namespace OpenRace.Features.Auth
                 var result = await _protectedLocalStorage.GetAsync<Session>(SessionKey);
                 return result.Value ?? Session.Empty;
             }
+            catch (TaskCanceledException e)
+            {
+                _logger.LogDebug(e, "Session getting is cancelled");
+                return Session.Empty;
+            }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error while deserializing a session");

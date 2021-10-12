@@ -13,12 +13,21 @@ namespace OpenRace.Features.Auth
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
+            await base.OnAfterRenderAsync(firstRender);
             if (firstRender)
             {
                 _session = await SessionService.Get();
                 StateHasChanged();
+                if (_session.IsAuthorized())
+                {
+                    await OnAuthorizedAsync();
+                }
             }
-            await base.OnAfterRenderAsync(firstRender);
+        }
+
+        protected virtual Task OnAuthorizedAsync()
+        {
+            return Task.CompletedTask;
         }
 
         protected async Task SetSession(Session session, bool updateState = true)

@@ -49,9 +49,9 @@
 		var session = new Session(model.UserName, model.Password);
 		if (session.IsAuthorized())
 		{
-			await SessionService.Set(session);
+			await SetSession(session);
 			ToastService.ShowSuccess("Успешная авторизация");
-			NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+			//NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
 		}
 		else
 		{

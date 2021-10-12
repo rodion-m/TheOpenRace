@@ -43,8 +43,6 @@ namespace OpenRace
 #else
             const bool IsDebug = false;
 #endif
-            // ReSharper disable once HeapView.ClosureAllocation
-            var secrets = AppSecrets.GetInstance();
             var conf = new LoggerConfiguration()
                 .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
@@ -58,6 +56,8 @@ namespace OpenRace
 
             if (!IsDebug)
             {
+                // ReSharper disable once HeapView.ClosureAllocation
+                var secrets = AppSecrets.GetInstance();
                 conf.WriteTo.Sentry(s =>
                     {
                         s.Dsn = secrets.SentryDsn;

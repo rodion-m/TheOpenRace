@@ -28,6 +28,7 @@
 			<thead>
 			<tr>
 				<th scope="col">Дистанция</th>
+				<th scope="col">Все</th>
 				<th scope="col">Взрослые</th>
 				<th scope="col">Дети</th>
 				<th scope="col">Мужчины</th>
@@ -46,9 +47,10 @@
 				<tr>
 					<th scope="row" style="background-color: @color">@distanceS</th>
 					<td>@(_statisticsData.Count(distance))</td>
+					<td>@(_statisticsData.Count(distance, children: false))</td>
 					<td>@_statisticsData.Count(distance, children: true)</td>
-					<td>@_statisticsData.Count(distance, Gender.Male)</td>
-					<td>@_statisticsData.Count(distance, Gender.Female)</td>
+					<td>@_statisticsData.Count(distance, Gender.Male, children: false)</td>
+					<td>@_statisticsData.Count(distance, Gender.Female, children: false)</td>
 					<td>@_statisticsData.Count(distance, Gender.Male, true)</td>
 					<td>@_statisticsData.Count(distance, Gender.Female, true)</td>
 				</tr>
@@ -116,17 +118,11 @@ else
 
 	StatisticsData? _statisticsData;
 
-	protected override async Task OnAfterRenderAsync(bool firstRender)
+	protected override async Task OnAuthorizedAsync()
 	{
-		await base.OnAfterRenderAsync(firstRender);
-		if (firstRender)
-		{
-			if (Session.IsAuthorized())
-			{
-				_statisticsData = new StatisticsData(await MembersRepo.AllAsync().OrderBy(it => it.CreatedAt).ToListAsync());
-				StateHasChanged();
-			}
-		}
+		await base.OnAuthorizedAsync();
+		_statisticsData = new StatisticsData(await MembersRepo.AllAsync().OrderByDescending(it => it.CreatedAt).ToListAsync());
+		StateHasChanged();
 	}
 
 }

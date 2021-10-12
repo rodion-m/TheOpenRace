@@ -27,8 +27,10 @@ namespace OpenRace.Features.Registration
             _appConfig = appConfig;
         }
 
+        private static readonly AsyncLock _registrationMutex = new();
         public async Task<(RegistrationResult, Member)> RegisterOrUpdate(Member member)
         {
+            using var locking = await _registrationMutex.LockAsync();
             var existedMember = await _members.FirstOrDefaultAsync(
                 new MemberByEmailAndName(member.Email, member.FullName));
 
@@ -94,7 +96,7 @@ namespace OpenRace.Features.Registration
             return member;
         }
 
-        private readonly AsyncLock _memberNumberMutex = new();
+        private static readonly AsyncLock _memberNumberMutex = new();
 
         public async Task<Member> SetMembershipPaid(Member member, bool assignNumberIfItsNot = true)
         {

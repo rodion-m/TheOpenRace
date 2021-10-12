@@ -7,6 +7,8 @@
 @inject ILogger<EasyDataPage> _logger
 @inject IJSRuntime JSRuntime
 
+<h1>Редактор</h1>
+
 @if (Session.IsAuthorized())
 {
     <div class="container">
@@ -22,23 +24,20 @@ else
     [Parameter]
     public string? Entity { get; set; }
 
-    private bool _firstRenderComplete;
+    private bool _easyDataInitialized;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAuthorizedAsync()
     {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("runEasyData");
-            _firstRenderComplete = true;
-        }
+        await base.OnAuthorizedAsync();
+        await JSRuntime.InvokeVoidAsync("runEasyData");
+        _easyDataInitialized = true;
     }
 
     private bool _disposed;
 
     public async ValueTask DisposeAsync()
     {
-        if (_firstRenderComplete && !_disposed)
+        if (_easyDataInitialized && !_disposed)
         {
             _disposed = true;
             try
