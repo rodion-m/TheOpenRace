@@ -11,7 +11,7 @@ using OpenRace.Data.Ef;
 namespace OpenRace.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20211013222712_AddEvents")]
+    [Migration("20211013224259_AddEvents")]
     partial class AddEvents
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -17,19 +17,20 @@
 {
 	if (_memberLaps != null)
 	{
-		var hMemberCount = 10;
+		var hMemberCount = 8;
 		var offset = 0;
-		<table>
+		<table style="border: 5px">
 			@for (var members = _memberLaps.Take(hMemberCount); 
             	members.Any(); 
             	members = _memberLaps.Skip(offset).Take(hMemberCount))
             {
             	offset += hMemberCount;
-	            <tr>
+	            <tr style="border: 5px">
 		            @foreach (var (number, lap) in members)
 		            {
-			            <button class="btn btn-success" @onclick="() => LapComplete(number, lap)">
-				            @number (⬤@lap)
+			            <button class="btn btn-dark" @onclick="() => LapComplete(number, lap)"
+			                    style="width: 100px; height: 70px; margin: 5px">
+				            <span style="font-weight: bold; font-size: 200%">@number</span> <sup>⬤@lap</sup>
 			            </button>
 		            }
 	            </tr>
@@ -69,6 +70,8 @@ else
 			var lapCount = e.Count(it => it.EventType == EventType.LapComplete) + 1;
 			return new MemberLap(e.Key, lapCount);
 		}).ToList();
+		
+		StateHasChanged();
 	}
 
 	private Task LapComplete(int number, int lap)
