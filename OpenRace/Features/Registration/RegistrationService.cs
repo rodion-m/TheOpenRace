@@ -121,9 +121,7 @@ namespace OpenRace.Features.Registration
         private async Task<int> GetNewMemberNumber(Member member)
         {
             var lastMember = await _members.GetLastMemberNumber(member.Distance);
-            return lastMember != null 
-                ? lastMember.Number.GetValueOrDefault() + 1 
-                : _appConfig.AvailableDistances.First(it => it.DistanceMt == member.Distance).BeginsWithNumber;
+            return _appConfig.GetNextMemberNumber(member.Distance, lastMember?.Number);
         }
     }
 

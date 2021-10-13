@@ -1,9 +1,15 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 
 namespace OpenRace
 {
     public static class Extensions
     {
+        public static bool Contains(this Range range, int index)
+        {
+            return index >= range.Start.Value && (range.End.IsFromEnd || index <= range.End.Value);
+        }
+        
         /// <summary>
         /// Удаляет все пробелы, скобки и тире из номера телефона и приводит его к единому формату  +796212345678
         /// </summary>
