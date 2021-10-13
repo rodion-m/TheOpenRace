@@ -10,7 +10,7 @@ using OpenRace.Data.Ef;
 
 namespace OpenRace.Migrations
 {
-    [DbContext(typeof(RaceDbContext))]
+    [DbContext(typeof(AppDbContext))]
     [Migration("20211007215448_AddMemberIsSubscribed")]
     partial class AddMemberIsSubscribed
     {

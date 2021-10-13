@@ -19,7 +19,8 @@ namespace OpenRace.Features.Registration
         private readonly IClock _clock;
         private readonly AppConfig _appConfig;
 
-        public RegistrationService(MembersRepository members, PaymentService paymentService, IClock clock, AppConfig appConfig)
+        public RegistrationService(MembersRepository members, PaymentService paymentService, IClock clock,
+            AppConfig appConfig)
         {
             _members = members;
             _paymentService = paymentService;
@@ -28,6 +29,7 @@ namespace OpenRace.Features.Registration
         }
 
         private static readonly AsyncLock _registrationMutex = new();
+
         public async Task<(RegistrationResult, Member)> RegisterOrUpdate(Member member)
         {
             using var locking = await _registrationMutex.LockAsync();
@@ -36,7 +38,15 @@ namespace OpenRace.Features.Registration
 
             if (existedMember != null)
             {
-                member = member with { Id = existedMember.Id, Number = existedMember.Number };
+                member = member with
+                {
+                    Id = existedMember.Id
+                };
+                if (member.Distance == existedMember.Distance)
+                {
+                    member.Number = existedMember.Number;
+                }
+
                 await _members.DeleteAsync(existedMember);
             }
 
@@ -57,7 +67,8 @@ namespace OpenRace.Features.Registration
             return redirectUri;
         }
 
-        public async Task<(RegistrationResult, Member)> RegisterMember(RegistrationModel model, Entities.Payment? payment)
+        public async Task<(RegistrationResult, Member)> RegisterMember(RegistrationModel model,
+            Entities.Payment? payment)
         {
             var member = CreateMemberFromRegistrationModel(model, payment);
             using var locking = await _memberNumberMutex.LockAsync();
@@ -116,7 +127,7 @@ namespace OpenRace.Features.Registration
             member.Number = await GetNewMemberNumber(member);
             await _members.UpdateAsync(member);
         }
-        
+
         [Pure]
         private async Task<int> GetNewMemberNumber(Member member)
         {

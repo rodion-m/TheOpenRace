@@ -1,4 +1,6 @@
-﻿namespace OpenRace
+﻿using OpenRace.Exceptions;
+
+namespace OpenRace
 {
     // TODO: https://docs.microsoft.com/ru-ru/aspnet/core/security/key-vault-configuration?view=aspnetcore-5.0
     public partial record AppSecrets(

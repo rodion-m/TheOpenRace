@@ -4,13 +4,14 @@ using OpenRace.Entities;
 
 namespace OpenRace.Data.Ef
 {
-    public class RaceDbContext : DbContext
+    public class AppDbContext : DbContext
     {
-        public RaceDbContext(DbContextOptions<RaceDbContext> options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
         }
         
         public DbSet<Member> Members => Set<Member>();
+        public DbSet<RaceEvent> Events => Set<RaceEvent>();
         public DbSet<MemberResult> Results => Set<MemberResult>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

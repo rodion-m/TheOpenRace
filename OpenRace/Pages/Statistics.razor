@@ -3,11 +3,9 @@
 @using OpenRace.Features.Payment
 @using OpenRace.Entities
 @using OpenRace.Data.Ef
-@using OpenRace.Data.Specifications
 @using OpenRace.Features.Registration
 @using BlazorTable
 @using System.Drawing
-@using Amazon.SimpleEmail.Model
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 
@@ -20,7 +18,7 @@
 
 <h1>Статистика</h1>
 
-@if (Session.IsAuthorized())
+@if (Session.IsAdmin())
 {
 	if (_statisticsData != null)
 	{

@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Ardalis.Specification;
 using Microsoft.EntityFrameworkCore;
 using OpenRace.Entities;
 
@@ -10,9 +10,15 @@ namespace OpenRace.Data.Ef
 {
     public class MembersRepository : EfRepository<Member>
     {
-        public MembersRepository(RaceDbContext dbContext) : base(dbContext)
+        public MembersRepository(AppDbContext dbContext) : base(dbContext)
         {
         }
+
+        public IAsyncEnumerable<Member> GetAdults() 
+            => _dbContext.Members.AsQueryable().Where(it => it.Age >= Member.AdultsAge).AsAsyncEnumerable();
+        
+        public IAsyncEnumerable<Member> GetChildren() 
+            => _dbContext.Members.AsQueryable().Where(it => it.Age < Member.AdultsAge).AsAsyncEnumerable();
 
         // public override Task AddOrUpdateAsync(Member entity, CancellationToken cancellationToken = default)
         // {

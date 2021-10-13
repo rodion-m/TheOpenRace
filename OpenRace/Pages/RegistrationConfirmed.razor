@@ -18,7 +18,8 @@
 	else
 	{
 		<h2 style="color: green">Участие в забеге подтверждено!</h2>
-		<h3 style="color: green">Вы бежите под номером: @(_member.Number)</h3>
+		<h3>@(_member.FullName)</h3>
+		<h3>Вы бежите под номером: @(_member.Number)</h3>
 		<button class="btn btn-primary" @onclick="OpenSite">Вернуться на сайт</button>
 	}
 }

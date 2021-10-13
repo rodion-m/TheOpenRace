@@ -1,0 +1,79 @@
+@page "/distances/{distance:int}"
+@using OpenRace.Data.Ef
+@using System.Drawing
+@using OpenRace.Entities
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository MembersRepo
+@inject EventsRepository EventsRepo
+@inject IToastService ToastService
+
+<h1>Бегуны</h1>
+
+@if (Session.IsAuthorized())
+{
+	if (_memberLaps != null)
+	{
+		var hMemberCount = 10;
+		var offset = 0;
+		<table>
+			@for (var members = _memberLaps.Take(hMemberCount); 
+            	members.Any(); 
+            	members = _memberLaps.Skip(offset).Take(hMemberCount))
+            {
+            	offset += hMemberCount;
+	            <tr>
+		            @foreach (var (number, lap) in members)
+		            {
+			            <button class="btn btn-success" @onclick="() => LapComplete(number, lap)">
+				            @number (⬤@lap)
+			            </button>
+		            }
+	            </tr>
+            }
+		</table>
+	}
+	else
+	{
+		<div>Загрузка...</div>
+	}
+}
+else
+{
+	<div>Требуется авторизация</div>
+}
+
+@code {
+	[Parameter]
+	public int Distance { get; set; }
+
+	private List<MemberLap>? _memberLaps;
+
+	private record MemberLap(int MemberNumber, int Lap);
+	
+	protected override async Task OnAuthorizedAsync()
+	{
+		await base.OnAuthorizedAsync();
+		await UpdateRunners();
+	}
+
+	private async Task UpdateRunners()
+	{
+		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
+			.ToLookupAsync(it => it.MemberNumber);
+		_memberLaps = events.Select(e =>
+		{
+			var lapCount = e.Count(it => it.EventType == EventType.LapComplete) + 1;
+			return new MemberLap(e.Key, lapCount);
+		}).ToList();
+	}
+
+	private Task LapComplete(int number, int lap)
+	{
+		throw new NotImplementedException();
+	}
+
+}

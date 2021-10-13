@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace OpenRace
+namespace OpenRace.Exceptions
 {
     public class AppException : ApplicationException
     {

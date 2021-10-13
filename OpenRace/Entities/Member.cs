@@ -29,6 +29,8 @@ namespace OpenRace.Entities
             Referer = referer;
         }
 
+        public const int AdultsAge = 17;
+
         public Guid Id { get; set; }
         [MetaEntityAttr(Enabled = false)]
         public Instant CreatedAt { get; set; }
@@ -53,10 +55,8 @@ namespace OpenRace.Entities
         [MetaEntityAttr(Enabled = false)]
         public Payment? Payment { get; set; }
 
-        public bool IsChild()
-        {
-            return Age < 17;
-        }
+        public bool IsChild() => Age < AdultsAge;
+        public bool IsAdult() => Age >= AdultsAge;
     }
     
     public enum Gender

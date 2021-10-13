@@ -1,0 +1,121 @@
+@page "/distances"
+@using OpenRace.Data.Ef
+@using BlazorTable
+@using System.Drawing
+@using NodaTime
+@using OpenRace.Entities
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository MembersRepo
+@inject EventsRepository EventsRepo
+@inject IToastService ToastService
+@inject IClock Clock
+
+<h1>Список дистанций</h1>
+
+@if (Session.IsAuthorized())
+{
+	if (Session.IsAdmin())
+	{
+		<table>
+			<tr>
+				<button class="btn btn-danger" @onclick="StartAdults" disabled="@IsDisabled" style="width: 300px">
+					СТАРТ ВЗРОЛСЛЫХ!
+				</button>
+			</tr>
+			<hr/>
+			<tr>
+				<button class="btn btn-danger" @onclick="StartChildren" disabled="@IsDisabled" style="width: 300px">
+					СТАРТ ДЕТЕЙ!
+				</button>
+			</tr>
+		</table>
+		<hr/>
+		<hr/>
+		<hr/>
+	}
+	<table>
+		@foreach (var distanceInfo in AppConfig.AvailableDistances)
+		{
+			var distance = distanceInfo.DistanceMt;
+			var distanceS = $"{distance / 1000} км.";
+			var color = ColorTranslator.ToHtml(distanceInfo.Color);
+			<tr>
+				<th>
+					<button class="btn"
+					        style="background-color: @color; width: 500px; height: 100px"
+					        @onclick="() => OpenDistance(distance)">
+						@distanceS
+					</button>
+				</th>
+			</tr>
+		}
+	</table>
+	
+	if (Session.IsAdmin())
+	{
+		<hr/>
+		<hr/>
+		<hr/>
+		<table>
+			<tr>
+				<button class="btn btn-dark" @onclick="RaceComplete" disabled="@IsDisabled" style="width: 500px">
+					ЗАБЕГ ОКОНЧЕН
+				</button>
+			</tr>
+		</table>
+	}
+}
+else
+{
+	<div>Требуется авторизация</div>
+}
+
+@code {
+	public bool IsDisabled { get; set; }
+
+	private void OpenDistance(int distance)
+	{
+		NavigationManager.NavigateTo(NavigationManager.Uri + $"/{distance}");
+	}
+
+	private async Task StartAdults()
+	{
+		IsDisabled = true;
+		StateHasChanged();
+		ToastService.ShowInfo("Запускаем взрослых...");
+		var members = await MembersRepo.GetAdults().ToListAsync();
+		await StartMembers(members);
+		IsDisabled = false;
+		StateHasChanged();
+	}
+
+	private async Task StartChildren()
+	{
+		IsDisabled = true;
+		StateHasChanged();
+		ToastService.ShowInfo("Запускаем детей...");
+		var members = await MembersRepo.GetChildren().ToListAsync();
+		await StartMembers(members);
+		IsDisabled = false;
+	}
+
+	private async Task StartMembers(List<Member> members)
+	{
+		var now = Clock.GetCurrentInstant();
+		var events = members.Select(member => new RaceEvent(
+			Guid.NewGuid(), AppConfig.RaceId, member.Number.GetValueOrDefault(), EventType.RaceStarted, now, Session.UserName, member.Distance)
+		);
+		await EventsRepo.AddAll(events);
+		ToastService.ShowSuccess("Гонка запущена!");
+	}
+
+	private Task RaceComplete()
+	{
+		throw new NotImplementedException();
+	}
+
+}

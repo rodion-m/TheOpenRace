@@ -1,7 +1,6 @@
 ﻿using System;
-using JetBrains.Annotations;
 
-namespace OpenRace
+namespace OpenRace.Exceptions
 {
     public class RegistrationNumbersEndedException : AppException
     {

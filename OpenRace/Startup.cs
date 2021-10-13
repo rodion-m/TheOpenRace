@@ -1,5 +1,6 @@
 using System;
 using Blazored.Toast;
+using BlazorPro.BlazorSize;
 using BlazorTable;
 using Coravel;
 using EasyData.Services;
@@ -43,10 +44,11 @@ namespace OpenRace
             services.AddLocalization();
             services.AddBlazoredToast();
             services.AddBlazorTable();
+            services.AddMediaQueryService();
 
             services.ConfigureInvalidStateCustomResponse();
 
-            services.AddDbContext<RaceDbContext>(options =>
+            services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
                     secrets.ConnectionStrings.PostgreCredentials,
                     o => o
@@ -75,6 +77,8 @@ namespace OpenRace
             services.AddSingleton<EmailTemplates>();
             services.AddSingleton<IEmailService, AmazonSESEmailService>();
             services.AddScoped<MembersRepository>();
+            services.AddScoped<EventsRepository>();
+            services.AddScoped(typeof(EfRepository<>));
             services.AddScoped<RegistrationService>();
             services.AddScoped<PaymentService>();
             services.AddScoped<SessionService>();
@@ -109,7 +113,7 @@ namespace OpenRace
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapEasyData(options => {
-                    options.UseDbContext<RaceDbContext>();
+                    options.UseDbContext<AppDbContext>();
                 });
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");

@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using NodaTime;
+using OpenRace.Exceptions;
 
 namespace OpenRace
 {
@@ -12,6 +13,7 @@ namespace OpenRace
         ZonedDateTime RaceDateTime,
         string SenderName,
         string SenderEmailAddress,
+        Guid RaceId,
         CultureInfo DefaultCultureInfo,
         AppConfig.DistanceInfo[] AvailableDistances)
     {
@@ -55,6 +57,7 @@ namespace OpenRace
                 Offset.FromHours(3)),
             "Храм св. Владимира",
             "info@svzabeg.ru",
+            new Guid("5a61b11d-e3ce-483b-9b8e-21387cb5c16d"),
             DefaultCultureInfo: new CultureInfo("ru"),
             AvailableDistances: new DistanceInfo[]
             {

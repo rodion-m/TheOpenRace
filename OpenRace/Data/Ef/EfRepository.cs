@@ -13,10 +13,10 @@ namespace OpenRace.Data.Ef
     // See: https://github.com/ardalis/Specification/blob/main/Specification.EntityFrameworkCore/src/Ardalis.Specification.EntityFrameworkCore/RepositoryBaseOfT.cs
     public class EfRepository<TEntity> where TEntity : class, IEntity
     {
-        protected readonly RaceDbContext _dbContext;
+        protected readonly AppDbContext _dbContext;
         private readonly ISpecificationEvaluator specificationEvaluator = SpecificationEvaluator.Default;
 
-        public EfRepository(RaceDbContext dbContext)
+        public EfRepository(AppDbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -50,6 +50,12 @@ namespace OpenRace.Data.Ef
         public virtual async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             _dbContext.Entry(entity).State = EntityState.Modified;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        
+        public async Task AddAll(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+        {
+            await _dbContext.AddRangeAsync(entities, cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
         

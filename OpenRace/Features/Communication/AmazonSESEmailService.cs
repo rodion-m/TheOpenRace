@@ -74,12 +74,12 @@ namespace OpenRace.Features.Communication
             var html = _templates.GetTemplate1Html(
                 "Участие в забеге подтверждено!", 
                 $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
-                $"Номер участника: {member.Number}",
+                $"Имя участника: {member.FullName}<br/>Вы бежите под номером: {member.Number}",
                 "Ждем вас!",
                 _appConfig.SiteUrl,
                 _appConfig.GetLink($"unsubscribe/{member.Id}")
             );
-            return Send("Участие в забеге", html,  member.Email);
+            return Send($"Участник забега № {member.Number} {member.FullName}", html,  member.Email);
         }
     }
 }
