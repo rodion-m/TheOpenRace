@@ -139,10 +139,14 @@ else
 			_busy = true;
 			ToastService.ShowWarning("Отмена последнего действия...");
 			var @event = await EventsRepo.GetLastEventByCreatorOrNull(Session.UserName);
-			if (@event != null)
+			if (@event != null && @event.EventType != EventType.RaceStarted)
 			{
 				await EventsRepo.DeleteAsync(@event);
 				ToastService.ShowSuccess($"Действие {@event.EventType} отменено для участника {@event.MemberNumber}");
+				if (@event.EventType == EventType.RaceFinished)
+				{
+					await CancelLastEvent();
+				}
 			}
 			else
 			{

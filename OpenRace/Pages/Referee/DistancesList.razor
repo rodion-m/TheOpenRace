@@ -108,15 +108,38 @@ else
 	{
 		var now = Clock.GetCurrentInstant();
 		var events = members.Select(member => new RaceEvent(
-			Guid.NewGuid(), AppConfig.RaceId, member.Number.GetValueOrDefault(), EventType.RaceStarted, now, Session.UserName, member.Distance)
-			);
+			Guid.NewGuid(), 
+			AppConfig.RaceId, 
+			member.Number.GetValueOrDefault(), 
+			EventType.RaceStarted, 
+			now, 
+			Session.UserName, 
+			member.Distance)
+		);
 		await EventsRepo.AddAll(events);
 		ToastService.ShowSuccess("Гонка запущена!");
 	}
 
-	private Task RaceComplete()
+	private async Task RaceComplete()
 	{
-		throw new NotImplementedException();
+		ToastService.ShowInfo("Завершение забега...");
+		var events = await EventsRepo.GetRaceEvents(
+			AppConfig.RaceId, EventType.RaceStarted, EventType.RaceFinished)
+			.ToLookupAsync(it => it.MemberNumber);
+		var now = Clock.GetCurrentInstant();
+		var raceFinishedEvents = events.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
+			.Select(it => new RaceEvent(
+				Guid.NewGuid(), 
+				AppConfig.RaceId, 
+				it.Key,
+				EventType.RaceFinished, 
+				now, 
+				Session.UserName, 
+				it.First().Distance
+				)
+			);
+		await EventsRepo.AddAll(raceFinishedEvents);
+		ToastService.ShowSuccess("Забег завершен!");
 	}
 
 }

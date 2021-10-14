@@ -29,6 +29,7 @@ namespace OpenRace.Entities
 
     public enum EventType
     {
+        CameToTheRace ,
         RaceStarted,
         LapComplete,
         RaceFinished

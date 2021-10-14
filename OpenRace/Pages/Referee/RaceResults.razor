@@ -1,0 +1,114 @@
+@page "/referee/results"
+@using OpenRace.Data.Ef
+@using System.Drawing
+@using NodaTime
+@using OpenRace.Entities
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository MembersRepo
+@inject EventsRepository EventsRepo
+@inject IToastService ToastService
+@inject IClock Clock
+
+<h1>Результаты забега</h1>
+
+@if (Session.IsAuthorized())
+{
+	<table>
+		<tr>
+			<td>Дистанция: </td>
+			<td>
+				<InputSelect @bind-Value="_filter.Distance" @onchange="UpdateFilter">
+					<option value="">Выбрать</option>
+					@foreach (var distanceInfo in AppConfig.AvailableDistances)
+					{
+						var distance = distanceInfo.DistanceMt;
+						var distanceS = $"{distance / 1000} км.";
+						<option value="@distance">@distanceS</option>
+					}
+				</InputSelect>
+			</td>
+		</tr>
+		<tr>
+			<td>Пол: </td>
+			<td>
+				<InputSelect @bind-Value="_filter.Gender" @onchange="UpdateFilter">
+					<option value="">Любой</option>
+					<option value="@Gender.Male">Мужской</option>
+					<option value="@Gender.Female">Женский</option>
+				</InputSelect>
+			</td>
+		</tr>
+		<tr>
+			<td>Дети или взрослые: </td>
+			<td>
+				<InputSelect @bind-Value="_filter.Gender" @onchange="UpdateFilter">
+					<option value="">Все</option>
+					<option value="false">Только взрослые</option>
+					<option value="@Gender.Female">Только дети</option>
+				</InputSelect>
+			</td>
+		</tr>
+	</table>
+	if (results != null)
+	{
+	}
+	else
+	{
+		<div>Выберите дистанцию</div>
+	}
+}
+else
+{
+	<div>Требуется авторизация</div>
+}
+
+@code {
+	private ResultsFilter _filter { get; set; } = new ResultsFilter(null, null, null);
+	ILookup<Member, RaceEvent[]>? results;
+
+	private record ResultsFilter
+	{
+		public ResultsFilter(int? distance, Gender? gender, bool? children)
+		{
+			Distance = distance;
+			Gender = gender;
+			Children = children;
+		}
+
+		public int? Distance { get; set; }
+		public Gender? Gender { get; set; }
+		public bool? Children { get; set; }
+
+		public void Deconstruct(out int? distance, out Gender? gender, out bool? children)
+		{
+			distance = Distance;
+			gender = Gender;
+			children = Children;
+		}
+	}
+
+	protected override async Task OnAuthorizedAsync()
+	{
+		await base.OnAuthorizedAsync();
+	}
+
+	private async Task UpdateFilter()
+	{
+		var (distance, gender, children) = _filter;
+
+		if (distance == null)
+		{
+			results = null;
+			ToastService.ShowError("Выберите дистанцию");
+			StateHasChanged();
+			return;
+		}
+		results = await EventsRepo.GetResults(AppConfig.RaceId, distance.Value, gender, children);
+		StateHasChanged();
+	}
+
+}
