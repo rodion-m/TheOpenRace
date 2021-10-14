@@ -22,7 +22,7 @@ namespace OpenRace
 
         public int GetNextMemberNumber(int distance, int? currentLastNumber)
         {
-            var ranges = AvailableDistances.First(it => it.DistanceMt == distance).Numbers;
+            var ranges = GetDistanceInfo(distance).Numbers;
             if (currentLastNumber == null)
             {
                 return ranges[0].Start.Value;
@@ -74,5 +74,7 @@ namespace OpenRace
         {
             public int LapsCount => DistanceMt / OneLapDistance;
         }
+
+        public DistanceInfo GetDistanceInfo(int distance) => AvailableDistances.First(it => it.DistanceMt == distance);
     }
 }

@@ -89,7 +89,7 @@ else
 	}
 
 	private bool _busy;
-	private AppConfig.DistanceInfo _distanceInfo => AppConfig.AvailableDistances.First(it => it.DistanceMt == Distance);
+	private AppConfig.DistanceInfo _distanceInfo => AppConfig.GetDistanceInfo(Distance);
 	private async Task LapComplete(int number, int newLap)
 	{
 		if(CancelIfBusy()) return;
@@ -145,6 +145,7 @@ else
 				ToastService.ShowSuccess($"Действие {@event.EventType} отменено для участника {@event.MemberNumber}");
 				if (@event.EventType == EventType.RaceFinished)
 				{
+					_busy = false;
 					await CancelLastEvent();
 				}
 			}

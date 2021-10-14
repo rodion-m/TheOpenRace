@@ -55,6 +55,7 @@
 	</table>
 	if (results != null)
 	{
+		//TODO statistics
 	}
 	else
 	{
@@ -68,7 +69,7 @@ else
 
 @code {
 	private ResultsFilter _filter { get; set; } = new ResultsFilter(null, null, null);
-	ILookup<Member, RaceEvent[]>? results;
+	List<RaceResult>? results;
 
 	private record ResultsFilter
 	{
@@ -91,6 +92,12 @@ else
 		}
 	}
 
+	private record RaceResult(
+		Member Member, Duration RaceTime, int FinishedLaps, int TotalLaps, Duration BestLap)
+	{
+		public bool IsAllLapsComplete => FinishedLaps == TotalLaps;
+	}
+
 	protected override async Task OnAuthorizedAsync()
 	{
 		await base.OnAuthorizedAsync();
@@ -99,7 +106,6 @@ else
 	private async Task UpdateFilter()
 	{
 		var (distance, gender, children) = _filter;
-
 		if (distance == null)
 		{
 			results = null;
@@ -107,8 +113,38 @@ else
 			StateHasChanged();
 			return;
 		}
-		results = await EventsRepo.GetResults(AppConfig.RaceId, distance.Value, gender, children);
+		var events = await EventsRepo.GetMemberAndEvents(AppConfig.RaceId, distance.Value, gender, children);
+		results = events.Select(memberEvents => CreateRaceResult(memberEvents.Key, memberEvents.Value))
+			.OrderByDescending(it => it.FinishedLaps)
+			.ThenBy(it => it.RaceTime)
+			.ThenBy(it => it.BestLap)
+			.ToList();
+		
 		StateHasChanged();
 	}
+
+	private RaceResult CreateRaceResult(Member member, RaceEvent[] events)
+	{
+		var raceStarted = events.Single(it => it.EventType == EventType.RaceStarted);
+		var raceFinished = events.Single(it => it.EventType == EventType.RaceFinished);
+		var calculatedLaps = events
+			.Where(it => it.EventType is EventType.LapComplete or EventType.RaceStarted)
+			.OrderBy(it => it.TimeStamp)
+			.Aggregate(new List<(RaceEvent @event, Duration? duration)>(), //TODO foreach!
+				(list, @event) =>
+				{
+					list.Add((@event, @event.TimeStamp - list.LastOrDefault().@event.TimeStamp));
+					return list;
+				});
+		var bestLap = calculatedLaps.Where(it => it.duration != null).Min(it => it.duration!.Value);
+		return new RaceResult(
+			member, 
+			raceFinished.TimeStamp - raceStarted.TimeStamp, 
+			events.Count(it => it.EventType == EventType.LapComplete),
+			AppConfig.GetDistanceInfo(raceStarted.Distance).LapsCount,
+			bestLap
+		);
+	}
+
 
 }

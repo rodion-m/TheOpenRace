@@ -45,7 +45,7 @@ namespace OpenRace.Data.Ef
                 .FirstOrDefaultAsync();
         }
 
-        public ValueTask<ILookup<Member, RaceEvent[]>> GetResults(Guid raceId, int distance, Gender? gender, bool? children)
+        public ValueTask<Dictionary<Member, RaceEvent[]>> GetMemberAndEvents(Guid raceId, int distance, Gender? gender, bool? children)
         {
             var q = from m in _dbContext.Members.AsQueryable()
                 join e in _dbContext.Events on m.Number equals e.MemberNumber
@@ -57,7 +57,7 @@ namespace OpenRace.Data.Ef
             if (children == false) q = q.Where(it => it.member.Age >= Member.AdultsAge);
             else if (children == true) q = q.Where(it => it.member.Age < Member.AdultsAge);
              return q.AsAsyncEnumerable()
-                .ToLookupAsync(it => it.member, arg => arg.events.ToArray());
+                .ToDictionaryAsync(it => it.member, arg => arg.events.ToArray());
             // return _dbContext.Members
             //     .GroupJoin(
             //         _dbContext.Events, member => member.Number,
