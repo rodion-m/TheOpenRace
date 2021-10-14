@@ -1,0 +1,169 @@
+@page "/referee/distances/{distance:int}"
+@using OpenRace.Data.Ef
+@using System.Drawing
+@using NodaTime
+@using OpenRace.Entities
+
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject NavigationManager NavigationManager
+@inject AppConfig AppConfig
+@inject MembersRepository MembersRepo
+@inject EventsRepository EventsRepo
+@inject IToastService ToastService
+@inject IClock Clock
+
+<h1>Участники</h1>
+
+@if (Session.IsAuthorized())
+{
+	if (_memberLaps != null)
+	{
+		var color = ColorTranslator.ToHtml(_distanceInfo.Color);
+		var hMemberCount = 8;
+		var offset = 0;
+		<table style="border: 5px">
+			@for (var members = _memberLaps.Take(hMemberCount); 
+				members.Any(); 
+				members = _memberLaps.Skip(offset).Take(hMemberCount))
+			{
+				offset += hMemberCount;
+				<tr style="border: 5px">
+					@foreach (var (number, lap) in members)
+					{
+						<button class="btn" @onclick="() => LapComplete(number, lap)"
+						        style="background-color: @color; width: 90px; height: 70px; margin: 5px">
+							<span style="font-weight: bold; font-size: 150%">@number</span> <sup>⬤@lap</sup>
+						</button>
+					}
+				</tr>
+			}
+		</table>
+		<hr/>
+		<hr/>
+		<hr/>
+		<button class="btn btn-danger" @onclick="CancelLastEvent"
+		        style="width: 200px; height: 70px">
+			Отменить последнее действие
+		</button>
+	}
+	else
+	{
+		<div>Загрузка...</div>
+	}
+}
+else
+{
+	<div>Требуется авторизация</div>
+}
+
+@code {
+	[Parameter]
+	public int Distance { get; set; }
+
+	private List<MemberLap>? _memberLaps;
+
+	private record MemberLap(int MemberNumber, int Lap);
+	
+	protected override async Task OnAuthorizedAsync()
+	{
+		await base.OnAuthorizedAsync();
+		await UpdateRunners();
+	}
+
+	private async Task UpdateRunners()
+	{
+		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
+			.ToLookupAsync(it => it.MemberNumber);
+		//var lapAverage; //TODO отсеивать отсутствующих бегунов
+		_memberLaps = events
+			.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
+			.OrderBy(it => it.Last().TimeStamp)
+			.Select(memberEvents =>
+		{
+			var lapCount = memberEvents.Count(it => it.EventType == EventType.LapComplete);
+			return new MemberLap(memberEvents.Key, lapCount + 1);
+		}).ToList();
+		
+		StateHasChanged();
+	}
+
+	private bool _busy;
+	private AppConfig.DistanceInfo _distanceInfo => AppConfig.AvailableDistances.First(it => it.DistanceMt == Distance);
+	private async Task LapComplete(int number, int newLap)
+	{
+		if(CancelIfBusy()) return;
+		try
+		{
+			_busy = true;
+			await EventsRepo.AddAsync(new RaceEvent(
+				Guid.NewGuid(), 
+				AppConfig.RaceId, 
+				number, 
+				EventType.LapComplete, 
+				Clock.GetCurrentInstant(),
+				Session.UserName,
+				Distance)
+			);
+			var remainingLaps = _distanceInfo.LapsCount - newLap;
+			if (remainingLaps > 0)
+			{
+				ToastService.ShowInfo($"Участник {number} пошел на {newLap}-й круг");
+			}
+			else
+			{
+				await EventsRepo.AddAsync(new RaceEvent(
+					Guid.NewGuid(), 
+					AppConfig.RaceId, 
+					number, 
+					EventType.RaceFinished, 
+					Clock.GetCurrentInstant(),
+					Session.UserName,
+					Distance)
+				);
+				ToastService.ShowSuccess($"Участник {number} завершил гонку!");
+			}
+			await UpdateRunners();
+		}
+		finally
+		{
+			_busy = false;
+		}
+	}
+
+	private async Task CancelLastEvent()
+	{
+		if(CancelIfBusy()) return;
+		try
+		{
+			_busy = true;
+			ToastService.ShowWarning("Отмена последнего действия...");
+			var @event = await EventsRepo.GetLastEventByCreatorOrNull(Session.UserName);
+			if (@event != null)
+			{
+				await EventsRepo.DeleteAsync(@event);
+				ToastService.ShowSuccess($"Действие {@event.EventType} отменено для участника {@event.MemberNumber}");
+			}
+			else
+			{
+				ToastService.ShowError("Нет действий");
+			}
+			await UpdateRunners();
+		}
+		finally
+		{
+			_busy = false;
+		}
+	}
+
+	private bool CancelIfBusy()
+	{
+		if (_busy)
+		{
+			ToastService.ShowWarning("Действие уже выполняется...");
+			return true;
+		}
+		return false;
+	}
+
+}

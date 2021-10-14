@@ -24,6 +24,15 @@ namespace OpenRace.Data.Ef
             => _dbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId && it.Distance == distance)
                 .OrderBy(it => it.TimeStamp)
+                .ThenBy(it => it.MemberNumber)
                 .AsAsyncEnumerable();
+
+        public Task<RaceEvent?> GetLastEventByCreatorOrNull(string creatorName)
+        {
+            return _dbContext.Events.AsQueryable()
+                .Where(it => it.CreatorName == creatorName)
+                .OrderByDescending(it => it.TimeStamp)
+                .FirstOrDefaultAsync();
+        }
     }
 }

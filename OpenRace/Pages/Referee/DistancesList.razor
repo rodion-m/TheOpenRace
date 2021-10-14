@@ -1,4 +1,4 @@
-@page "/distances"
+@page "/referee/distances"
 @using OpenRace.Data.Ef
 @using BlazorTable
 @using System.Drawing
@@ -14,22 +14,22 @@
 @inject IToastService ToastService
 @inject IClock Clock
 
-<h1>Список дистанций</h1>
-
 @if (Session.IsAuthorized())
 {
 	if (Session.IsAdmin())
 	{
+		<h1>Управление забегом</h1>
 		<table>
 			<tr>
-				<button class="btn btn-danger" @onclick="StartAdults" disabled="@IsDisabled" style="width: 300px">
-					СТАРТ ВЗРОЛСЛЫХ!
+				<button class="btn btn-danger" @onclick="StartChildren" disabled="@IsDisabled" style="width: 300px; height: 100px">
+					СТАРТ ДЕТЕЙ!
 				</button>
 			</tr>
+
 			<hr/>
 			<tr>
-				<button class="btn btn-danger" @onclick="StartChildren" disabled="@IsDisabled" style="width: 300px">
-					СТАРТ ДЕТЕЙ!
+				<button class="btn btn-danger" @onclick="StartAdults" disabled="@IsDisabled" style="width: 300px; height: 100px">
+					СТАРТ ВЗРОЛСЛЫХ!
 				</button>
 			</tr>
 		</table>
@@ -37,6 +37,7 @@
 		<hr/>
 		<hr/>
 	}
+	<h1>Список дистанций</h1>
 	<table>
 		@foreach (var distanceInfo in AppConfig.AvailableDistances)
 		{
@@ -46,15 +47,15 @@
 			<tr>
 				<th>
 					<button class="btn"
-					        style="background-color: @color; width: 500px; height: 100px"
+					        style="background-color: @color; width: 300px; height: 100px"
 					        @onclick="() => OpenDistance(distance)">
-						@distanceS
+						Судейство @distanceS
 					</button>
 				</th>
 			</tr>
 		}
 	</table>
-	
+
 	if (Session.IsAdmin())
 	{
 		<hr/>
@@ -62,7 +63,7 @@
 		<hr/>
 		<table>
 			<tr>
-				<button class="btn btn-dark" @onclick="RaceComplete" disabled="@IsDisabled" style="width: 500px">
+				<button class="btn btn-dark" @onclick="RaceComplete" disabled="@IsDisabled" style="width: 300px; height: 100px">
 					ЗАБЕГ ОКОНЧЕН
 				</button>
 			</tr>
@@ -108,7 +109,7 @@ else
 		var now = Clock.GetCurrentInstant();
 		var events = members.Select(member => new RaceEvent(
 			Guid.NewGuid(), AppConfig.RaceId, member.Number.GetValueOrDefault(), EventType.RaceStarted, now, Session.UserName, member.Distance)
-		);
+			);
 		await EventsRepo.AddAll(events);
 		ToastService.ShowSuccess("Гонка запущена!");
 	}

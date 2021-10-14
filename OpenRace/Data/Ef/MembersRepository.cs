@@ -32,7 +32,7 @@ namespace OpenRace.Data.Ef
             return Queryable.Where(_dbContext.Members, it => it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
-                .FirstOrDefaultAsync()!;
+                .FirstOrDefaultAsync();
         }
         
         public Task<Member?> GetLastMemberNumber(int distance)
@@ -40,7 +40,7 @@ namespace OpenRace.Data.Ef
             return Queryable.Where(_dbContext.Members, it => it.Distance == distance && it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
-                .FirstOrDefaultAsync()!;
+                .FirstOrDefaultAsync();
         }
         
         public override Task<Member> GetById(Guid id, CancellationToken cancellationToken = default)
@@ -54,7 +54,7 @@ namespace OpenRace.Data.Ef
         {
             return _dbContext.Members
                 .Include(it => it.Payment)
-                .FirstOrDefaultAsync(it => it.Id == id, cancellationToken)!;
+                .FirstOrDefaultAsync(it => it.Id == id, cancellationToken);
         }
     }
 }
