@@ -67,6 +67,17 @@
 					ЗАБЕГ ОКОНЧЕН
 				</button>
 			</tr>
+			<hr/>
+            <hr/>
+			<hr/>
+			<tr>
+				СТЕРЕТЬ ВСЕ ДАННЫЕ О ЗАБЕГЕ
+				<button class="btn btn-danger" 
+				        @onclick="ShowClearRaceToast"
+				        @ondblclick="ClearRace" disabled="@IsDisabled">
+					ОБНУЛИТЬ ЗАБЕГ
+				</button>
+			</tr>
 		</table>
 	}
 }
@@ -86,22 +97,35 @@ else
 	private async Task StartAdults()
 	{
 		IsDisabled = true;
-		StateHasChanged();
-		ToastService.ShowInfo("Запускаем взрослых...");
-		var members = await MembersRepo.GetAdults().ToListAsync();
-		await StartMembers(members);
-		IsDisabled = false;
-		StateHasChanged();
+		try
+		{
+			StateHasChanged();
+			ToastService.ShowInfo("Запускаем взрослых...");
+			var members = await MembersRepo.GetAdults().ToListAsync();
+			await StartMembers(members);
+		}
+		finally
+		{
+			IsDisabled = false;
+			StateHasChanged();
+		}
 	}
 
 	private async Task StartChildren()
 	{
 		IsDisabled = true;
-		StateHasChanged();
-		ToastService.ShowInfo("Запускаем детей...");
-		var members = await MembersRepo.GetChildren().ToListAsync();
-		await StartMembers(members);
-		IsDisabled = false;
+		try
+		{
+			StateHasChanged();
+			ToastService.ShowInfo("Запускаем детей...");
+			var members = await MembersRepo.GetChildren().ToListAsync();
+			await StartMembers(members);
+		}
+		finally
+		{
+			IsDisabled = false;
+			StateHasChanged();
+		}
 	}
 
 	private async Task StartMembers(List<Member> members)
@@ -117,7 +141,7 @@ else
 			member.Distance)
 		);
 		await EventsRepo.AddAll(events);
-		ToastService.ShowSuccess("Гонка запущена!");
+		ToastService.ShowSuccess($"Запущено {members.Count} бегунов!");
 	}
 
 	private async Task RaceComplete()
@@ -140,6 +164,18 @@ else
 			);
 		await EventsRepo.AddAll(raceFinishedEvents);
 		ToastService.ShowSuccess("Забег завершен!");
+	}
+
+	private async Task ClearRace()
+	{
+		ToastService.ShowWarning("Обнуление забега...");
+		await EventsRepo.DeleteEvents(AppConfig.RaceId);
+		ToastService.ShowSuccess("Забег ОБНУЛЕН!");
+	}
+
+	private void ShowClearRaceToast()
+	{
+		ToastService.ShowWarning("Опасно! Кликните ДВА раза по кнопке ОБНУЛИТЬ.");
 	}
 
 }

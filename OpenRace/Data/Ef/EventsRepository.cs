@@ -26,12 +26,12 @@ namespace OpenRace.Data.Ef
                 .OrderBy(it => it.TimeStamp)
                 .ThenBy(it => it.MemberNumber)
                 .AsAsyncEnumerable();
-        
+
         public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, EventType eventType)
             => _dbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId && it.EventType == eventType)
                 .AsAsyncEnumerable();
-        
+
         public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, EventType eventType1, EventType eventType2)
             => _dbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId && (it.EventType == eventType1 || it.EventType == eventType2))
@@ -45,19 +45,17 @@ namespace OpenRace.Data.Ef
                 .FirstOrDefaultAsync();
         }
 
-        public ValueTask<Dictionary<Member, RaceEvent[]>> GetMemberAndEvents(Guid raceId, int distance, Gender? gender, bool? children)
+        public async Task<Dictionary<Member, RaceEvent[]>> GetMemberAndEvents(Guid raceId, int distance, Gender? gender,
+            bool? children)
         {
-            var q = from m in _dbContext.Members.AsQueryable()
-                join e in _dbContext.Events on m.Number equals e.MemberNumber
-                where e.RaceId == raceId && e.Distance == distance
-                group e by m into g
-                select new { member = g.Key, events = g };
-
-            if (gender != null) q = q.Where(it => it.member.Gender == gender);
-            if (children == false) q = q.Where(it => it.member.Age >= Member.AdultsAge);
-            else if (children == true) q = q.Where(it => it.member.Age < Member.AdultsAge);
-             return q.AsAsyncEnumerable()
-                .ToDictionaryAsync(it => it.member, arg => arg.events.ToArray());
+            // TODO переписать в SQL
+            // var q = from m in _dbContext.Members.AsQueryable()
+            //     join e in _dbContext.Events.AsQueryable() on m.Number equals e.MemberNumber
+            //     where e.RaceId == raceId && e.Distance == distance
+            //     group e by m
+            //     into g
+            //     select new { member = g.Key, events = g };
+            
             // return _dbContext.Members
             //     .GroupJoin(
             //         _dbContext.Events, member => member.Number,
@@ -66,6 +64,37 @@ namespace OpenRace.Data.Ef
             //     )
             //     .AsAsyncEnumerable()
             //     .ToLookupAsync(it => it.member, arg => arg.events.ToArray());
+
+            // System.InvalidOperationException: The LINQ expression 'DbSet<Member>()
+            //     .Join(
+            //         inner: DbSet<RaceEvent>(),
+            //         outerKeySelector: m => m.Number,
+            //         innerKeySelector: r => (Nullable<int>)r.MemberNumber,
+            //         resultSelector: (m, r) => new TransparentIdentifier<Member, RaceEvent>(
+            //             Outer = m,
+            //             Inner = r
+            //         ))
+            //     .Where(ti => ti.Inner.RaceId == __raceId_0 && ti.Inner.Distance == __distance_1)
+            //     .GroupBy(
+            //         keySelector: ti => ti.Outer,
+            //         elementSelector: ti => ti.Inner)' could not be translated. 
+
+            var q = _dbContext.Members.AsQueryable();
+            if (gender != null) q = q.Where(it => it.Gender == gender);
+            if (children == false) q = q.Where(it => it.Age >= Member.AdultsAge);
+            else if (children == true) q = q.Where(it => it.Age < Member.AdultsAge);
+            var members = await q.ToListAsync();
+            var events = await GetRaceEvents(raceId, distance).ToLookupAsync(it => it.MemberNumber);
+            members.RemoveAll(it => !events.Contains(it.Number.GetValueOrDefault()));
+            var dict = members.ToDictionary(member => member, member => events[member.Number!.Value].ToArray());
+            return dict;
+        }
+
+        public async Task DeleteEvents(Guid raceId)
+        {
+            var events = await GetAllRaceEvents(raceId).ToListAsync();
+            await _dbContext.BulkDeleteAsync(events);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -1,8 +1,10 @@
 @page "/referee/results"
 @using OpenRace.Data.Ef
 @using System.Drawing
+@using System.Globalization
 @using NodaTime
 @using OpenRace.Entities
+@using BlazorTable
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 
@@ -17,12 +19,13 @@
 
 @if (Session.IsAuthorized())
 {
+	<EditForm Model="_filter" OnSubmit="UpdateFilter">
 	<table>
 		<tr>
 			<td>Дистанция: </td>
 			<td>
-				<InputSelect @bind-Value="_filter.Distance" @onchange="UpdateFilter">
-					<option value="">Выбрать</option>
+				<InputSelect class="form-control" @bind-Value="_filter.Distance">
+					<option value="">Выбор</option>
 					@foreach (var distanceInfo in AppConfig.AvailableDistances)
 					{
 						var distance = distanceInfo.DistanceMt;
@@ -35,7 +38,7 @@
 		<tr>
 			<td>Пол: </td>
 			<td>
-				<InputSelect @bind-Value="_filter.Gender" @onchange="UpdateFilter">
+				<InputSelect class="form-control" @bind-Value="_filter.Gender">
 					<option value="">Любой</option>
 					<option value="@Gender.Male">Мужской</option>
 					<option value="@Gender.Female">Женский</option>
@@ -45,21 +48,48 @@
 		<tr>
 			<td>Дети или взрослые: </td>
 			<td>
-				<InputSelect @bind-Value="_filter.Gender" @onchange="UpdateFilter">
+				<InputSelect class="form-control" @bind-Value="_filter.Children">
 					<option value="">Все</option>
-					<option value="false">Только взрослые</option>
-					<option value="@Gender.Female">Только дети</option>
+					<option value="0">Только взрослые</option>
+					<option value="1">Только дети</option>
 				</InputSelect>
 			</td>
 		</tr>
+		<tr><td colspan="2"><input class="btn btn-outline-info" type="submit" value="Показать"></td></tr>
 	</table>
+	</EditForm>
 	if (results != null)
 	{
-		//TODO statistics
-	}
-	else
-	{
-		<div>Выберите дистанцию</div>
+		var distanceInfo = AppConfig.GetDistanceInfo(_filter.Distance!.Value);
+		<h2>Итоги забега на @(distanceInfo.DistanceMt / 1000) км. (кругов: @(distanceInfo.LapsCount))</h2>
+		<Table TableItem="RaceResult" Items="results" PageSize="100" ColumnReorder="true">
+			<Column TableItem="RaceResult" Title="Место" Field="@(x => x.Position!)" Sortable="true" Filterable="true" Width="5%"/>
+			<Column TableItem="RaceResult" Title="Результат" Field="@(x => x.RaceTimeAsString!)" Sortable="true" Filterable="true" Width="15%">
+			</Column>
+			<Column TableItem="RaceResult" Title="Луч. кр." Field="@(x => x.BestLap!)" Sortable="true" Filterable="true" Width="10%">
+				<Template>
+					<span>@(context.BestLap != null ? FormatDuration(context.BestLap.Value) : "DNF")</span>
+				</Template>
+			</Column>
+			<Column TableItem="RaceResult" Title="Зав. кругов" Field="@(x => x.FinishedLaps)" Sortable="true" Filterable="true" Width="10%"/>
+			<Column TableItem="RaceResult" Title="Финиш" Field="@(x => x.FinishedLaps)" Sortable="true" Filterable="true" Width="10%">
+				<Template>
+					<span>@(context.IsAllLapsComplete ? "Да" : "Нет")</span>
+				</Template>
+			</Column>
+			<Column TableItem="RaceResult" Title="Имя" Field="@(x => x.Member.FullName)" Sortable="true" Filterable="true" Width="25%"/>
+			<Column TableItem="RaceResult" Title="№" Field="@(x => x.Member.Number!)" Sortable="true" Filterable="true" Width="5%"/>
+			<Column TableItem="RaceResult" Title="Возраст" Field="@(x => x.Member.Age)" Sortable="true" Filterable="true" Width="10%"/>
+			<Column TableItem="RaceResult" Title="Пол" Field="@(x => x.Member.Gender)" Sortable="true" Filterable="true" Width="5%">
+				<Template>
+					@{
+						var gen = context.Member.Gender == Gender.Male ? "М" : "Ж";
+						<span>@gen</span>
+					}
+				</Template>
+			</Column>
+			<Pager ShowPageNumber="true" ShowTotalCount="true"/>
+		</Table>
 	}
 }
 else
@@ -73,7 +103,7 @@ else
 
 	private record ResultsFilter
 	{
-		public ResultsFilter(int? distance, Gender? gender, bool? children)
+		public ResultsFilter(int? distance, Gender? gender, int? children)
 		{
 			Distance = distance;
 			Gender = gender;
@@ -82,9 +112,9 @@ else
 
 		public int? Distance { get; set; }
 		public Gender? Gender { get; set; }
-		public bool? Children { get; set; }
+		public int? Children { get; set; }
 
-		public void Deconstruct(out int? distance, out Gender? gender, out bool? children)
+		public void Deconstruct(out int? distance, out Gender? gender, out int? children)
 		{
 			distance = Distance;
 			gender = Gender;
@@ -93,9 +123,19 @@ else
 	}
 
 	private record RaceResult(
-		Member Member, Duration RaceTime, int FinishedLaps, int TotalLaps, Duration BestLap)
+		Member Member, Duration? RaceTime, int FinishedLaps, int TotalLaps, Duration? BestLap)
 	{
 		public bool IsAllLapsComplete => FinishedLaps == TotalLaps;
+		public int? Position { get; set; }
+		public string RaceTimeAsString
+		{
+			get
+			{
+				if (RaceTime == null) return "DNF";
+				if (IsAllLapsComplete) return FormatDuration(RaceTime.Value);
+				return $"{FormatDuration(RaceTime.Value)} DNF";
+			}
+		}
 	}
 
 	protected override async Task OnAuthorizedAsync()
@@ -113,38 +153,46 @@ else
 			StateHasChanged();
 			return;
 		}
-		var events = await EventsRepo.GetMemberAndEvents(AppConfig.RaceId, distance.Value, gender, children);
+		ToastService.ShowInfo("Загрузка...");
+		var events = await EventsRepo.GetMemberAndEvents(
+			AppConfig.RaceId, distance.Value, gender, children == null ? null : children == 1);
 		results = events.Select(memberEvents => CreateRaceResult(memberEvents.Key, memberEvents.Value))
 			.OrderByDescending(it => it.FinishedLaps)
 			.ThenBy(it => it.RaceTime)
 			.ThenBy(it => it.BestLap)
 			.ToList();
-		
+		for (var i = 0; i < results.Count; i++) results[i].Position = i + 1;
+
 		StateHasChanged();
 	}
 
 	private RaceResult CreateRaceResult(Member member, RaceEvent[] events)
 	{
+		//Console.WriteLine(string.Join('\n', events.Select(it => it.ToString())));
 		var raceStarted = events.Single(it => it.EventType == EventType.RaceStarted);
-		var raceFinished = events.Single(it => it.EventType == EventType.RaceFinished);
-		var calculatedLaps = events
-			.Where(it => it.EventType is EventType.LapComplete or EventType.RaceStarted)
-			.OrderBy(it => it.TimeStamp)
-			.Aggregate(new List<(RaceEvent @event, Duration? duration)>(), //TODO foreach!
-				(list, @event) =>
-				{
-					list.Add((@event, @event.TimeStamp - list.LastOrDefault().@event.TimeStamp));
-					return list;
-				});
-		var bestLap = calculatedLaps.Where(it => it.duration != null).Min(it => it.duration!.Value);
+		var laps = new List<(RaceEvent @event, Duration duration)>(events.Length);
+		for (var i = 1; i < events.Length; i++)
+		{
+			var @event = events[i];
+			if(@event.EventType == EventType.RaceFinished) break;
+			laps.Add((@event, @event.TimeStamp - events[i - 1].TimeStamp));
+		}
+		//Берем за финиш время последнего круга
+		var raceFinished = laps.Any() ? laps[^1].@event : (RaceEvent?) null;
+		var bestLap = laps.Any() ? laps.Min(it => it.duration) : (Duration?) null;
 		return new RaceResult(
-			member, 
-			raceFinished.TimeStamp - raceStarted.TimeStamp, 
+			member,
+			raceFinished?.TimeStamp - raceStarted.TimeStamp,
 			events.Count(it => it.EventType == EventType.LapComplete),
 			AppConfig.GetDistanceInfo(raceStarted.Distance).LapsCount,
 			bestLap
 		);
 	}
 
+
+	public static string FormatDuration(Duration duration)
+	{
+		return duration.ToString("hh:mm:ss", CultureInfo.InvariantCulture);
+	}
 
 }
