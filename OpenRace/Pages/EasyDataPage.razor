@@ -29,8 +29,11 @@ else
     protected override async Task OnAuthorizedAsync()
     {
         await base.OnAuthorizedAsync();
-        await JSRuntime.InvokeVoidAsync("runEasyData");
-        _easyDataInitialized = true;
+        if (Session.IsAdmin())
+        {
+            await JSRuntime.InvokeVoidAsync("runEasyData");
+            _easyDataInitialized = true;
+        }
     }
 
     private bool _disposed;

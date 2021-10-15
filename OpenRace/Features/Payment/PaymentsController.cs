@@ -45,7 +45,10 @@ namespace OpenRace.Features.Payment
             if (payment.Paid)
             {
                 var member = await _registrationService.SetMembershipPaid(payment.Id);
-                await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
+                if (member.Email != null && EmailValidation.EmailValidator.Validate(member.Email))
+                {
+                    await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
+                }
             }
             else
             {

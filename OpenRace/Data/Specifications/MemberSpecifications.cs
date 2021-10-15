@@ -22,7 +22,7 @@ namespace OpenRace.Data.Specifications
     
     public sealed class MemberByEmailAndName : Specification<Member>, ISingleResultSpecification
     {
-        public MemberByEmailAndName(string email, string fullName)
+        public MemberByEmailAndName(string? email, string fullName)
         {
             Query.Where(x => x.Email == email && x.FullName == fullName);
             Query.Include(it => it.Payment);

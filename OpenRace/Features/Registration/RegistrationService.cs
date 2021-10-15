@@ -77,7 +77,7 @@ namespace OpenRace.Features.Registration
         public async Task<string> RegisterMemberWithoutPayment(RegistrationModel model, string hostUrl, CultureInfo cultureInfo)
         {
             var (_, member) = await RegisterMember(model, null);
-            if (member.Email != null)
+            if (member.Email != null && EmailValidation.EmailValidator.Validate(member.Email))
             {
                 _queue.QueueAsyncTask(() => _emailService.SendMembershipConfirmedMessage(member, cultureInfo));
             }

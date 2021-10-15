@@ -10,6 +10,7 @@ using Amazon.SimpleEmail.Model;
 using Microsoft.Extensions.Logging;
 using MimeKit.Utils;
 using OpenRace.Entities;
+using OpenRace.Exceptions;
 using Serilog;
 
 namespace OpenRace.Features.Communication
@@ -71,6 +72,10 @@ namespace OpenRace.Features.Communication
 
         public Task SendMembershipConfirmedMessage(Member member, CultureInfo cultureInfo)
         {
+            if (string.IsNullOrWhiteSpace(member.Email) || !EmailValidation.EmailValidator.Validate(member.Email))
+            {
+                throw new ArgumentException($"Некорректный email: {member.Email}");
+            }
             var html = _templates.GetTemplate1Html(
                 "Участие в забеге подтверждено!", 
                 $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
