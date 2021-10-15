@@ -141,7 +141,7 @@ else
 			member.Distance)
 		);
 		await EventsRepo.AddAll(events);
-		ToastService.ShowSuccess($"Запущено {members.Count} бегунов!");
+		ToastService.ShowSuccess($"Запущено бегунов: {members.Count}");
 	}
 
 	private async Task RaceComplete()

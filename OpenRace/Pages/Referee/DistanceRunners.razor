@@ -20,25 +20,18 @@
 {
 	if (_membersLaps != null)
 	{
-		var color = ColorTranslator.ToHtml(_distanceInfo.Color);
-		var hMemberCount = 8;
-		var offset = 0;
+		var distanceColor = ColorTranslator.ToHtml(_distanceInfo.Color);
 		<table style="border: 5px">
-			@for (var members = _membersLaps.Take(hMemberCount); 
-				members.Any(); 
-				members = _membersLaps.Skip(offset).Take(hMemberCount))
-			{
-				offset += hMemberCount;
-				<tr style="border: 5px">
-					@foreach (var (number, lap) in members)
-					{
-						<button class="btn" @onclick="() => LapComplete(number, lap)"
-						        style="background-color: @color; width: 90px; height: 70px; margin: 5px">
-							<span style="font-weight: bold; font-size: 150%">@number</span> <sup>⬤@lap</sup>
-						</button>
-					}
-				</tr>
-			}
+			<tr style="border: 5px">
+				@foreach (var lap in _membersLaps)
+				{
+					var color = lap.IsCome ? distanceColor : ColorTranslator.ToHtml(Color.LightSlateGray);
+					<button class="btn" @onclick="() => LapComplete(lap.MemberNumber, lap.NextLap)"
+					        style="background-color: @color; width: 90px; height: 70px; margin: 5px">
+						<span style="font-weight: bold; font-size: 150%">@(lap.MemberNumber)</span> <sup>⬤@(lap.NextLap)</sup>
+					</button>
+				}
+			</tr>
 		</table>
 		<hr/>
 		<hr/>
@@ -69,8 +62,11 @@ else
 	private readonly Duration _timerUpdateRunnersInterval = Duration.FromSeconds(10);
 	private Instant _lastUpdatedAt = Instant.MinValue;
 	private bool _disposed;
-	
-	private record MemberLap(int MemberNumber, int Lap);
+
+	private record MemberLap(int MemberNumber, int NextLap)
+	{
+		public bool IsCome { get; set; }
+	}
 	
 	protected override async Task OnAuthorizedAsync()
 	{
@@ -101,7 +97,7 @@ else
 	{
 		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
 			.ToLookupAsync(it => it.MemberNumber);
-		 //TODO отсеивать отсутствующих бегунов
+
 		_membersLaps = events
 			.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
 			.OrderBy(it => it.Last().TimeStamp)
@@ -111,11 +107,31 @@ else
 			return new MemberLap(memberEvents.Key, lapCount + 1);
 		}).ToList();
 
+		_membersLaps = FilterNotComeRunners(_membersLaps);
+
 		if (!_disposed)
 		{
 			_lastUpdatedAt = Clock.GetCurrentInstant();
 			StateHasChanged();
 		}
+	}
+
+	private static List<MemberLap> FilterNotComeRunners(List<MemberLap> members)
+	{
+		var maxLapsCompletedRightNow = members.Count > 0 ? members.Max(it => it.NextLap) - 1 : 0;
+		bool IsCome(int lapCount)
+		{
+			if (lapCount > 0) return true;
+			if (maxLapsCompletedRightNow < 2) return true;
+			return false;
+		}
+
+		foreach (var lap in members)
+		{
+			lap.IsCome = IsCome(lap.NextLap - 1);
+		}
+
+		return members.OrderByDescending(it => it.IsCome).ToList();
 	}
 
 	private bool _busy;
