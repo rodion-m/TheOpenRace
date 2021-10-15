@@ -13,19 +13,13 @@ namespace OpenRace.Features.Registration
     public class RegistrationController : ControllerBase
     {
         private readonly RegistrationService _registrationService;
-        private readonly IEmailService _emailService;
-        private readonly IQueue _queue;
         private readonly AppConfig _appConfig;
 
         public RegistrationController(
-            RegistrationService registrationService, 
-            IEmailService emailService, 
-            IQueue queue, 
+            RegistrationService registrationService,
             AppConfig appConfig)
         {
             _registrationService = registrationService;
-            _emailService = emailService;
-            _queue = queue;
             _appConfig = appConfig;
         }
 
@@ -34,7 +28,7 @@ namespace OpenRace.Features.Registration
         {
             return new StatusCodeResult(StatusCodes.Status405MethodNotAllowed);
         }
-        
+
         [HttpPost]
         public async Task<IActionResult> Register([FromForm] RegistrationModel model)
         {
@@ -43,13 +37,13 @@ namespace OpenRace.Features.Registration
             {
                 return BadRequest($"Неизвестная дистанция: {model.DistanceKm}");
             }
-            var (_, member) = await _registrationService.RegisterMember(model, null);
+
             var rqf = Request.HttpContext.Features.Get<IRequestCultureFeature>();
             var culture = rqf.RequestCulture.Culture;
-            _queue.QueueAsyncTask(() => _emailService.SendMembershipConfirmedMessage(member, culture));
-            var redirectUri = $"{Request.Scheme}://{Request.Host}/confirmed/{member.Id}";
+            var redirectUri = await _registrationService.RegisterMemberWithoutPayment(
+                model, $"{Request.Scheme}://{Request.Host}", culture);
+
             return Redirect(redirectUri);
         }
-
     }
 }

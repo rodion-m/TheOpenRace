@@ -75,7 +75,7 @@ else
 	{
 		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
 			.ToLookupAsync(it => it.MemberNumber);
-		//var lapAverage; //TODO отсеивать отсутствующих бегунов
+		 //TODO отсеивать отсутствующих бегунов
 		_memberLaps = events
 			.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
 			.OrderBy(it => it.Last().TimeStamp)

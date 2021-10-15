@@ -3,6 +3,8 @@
 @using OpenRace.Entities
 @using OpenRace.Data.Ef
 
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
 @inject MembersRepository _membersRepo
@@ -20,7 +22,14 @@
 		<h2 style="color: green">Участие в забеге подтверждено!</h2>
 		<h3>@(_member.FullName)</h3>
 		<h3>Вы бежите под номером: @(_member.Number)</h3>
-		<button class="btn btn-primary" @onclick="OpenSite">Вернуться на сайт</button>
+		if (Session.IsAuthorized())
+		{
+			<button class="btn btn-primary" @onclick="OpenRegistration">Зарегистрировать еще</button>
+		}
+		else
+		{
+			<button class="btn btn-primary" @onclick="OpenSite">Вернуться на сайт</button>
+		}
 	}
 }
 else
@@ -62,9 +71,7 @@ else
 		StateHasChanged();
 	}
 
-	void OpenSite()
-	{
-		NavigationManager.NavigateTo(AppConfig.SiteUrl);
-	}
+	void OpenRegistration() => NavigationManager.NavigateTo($"{NavigationManager.BaseUri}{RegistrationForm.Identifier}");
+	void OpenSite() => NavigationManager.NavigateTo(AppConfig.SiteUrl);
 
 }

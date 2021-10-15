@@ -16,7 +16,7 @@ namespace OpenRace.Entities
             int age, 
             Gender gender, 
             int distance, 
-            string? referer)
+            string? referer, string? registeredBy)
         {
             Id = id;
             CreatedAt = createdAt;
@@ -27,6 +27,7 @@ namespace OpenRace.Entities
             Gender = gender;
             Distance = distance;
             Referer = referer;
+            RegisteredBy = registeredBy;
         }
 
         public const int AdultsAge = 17;
@@ -35,7 +36,7 @@ namespace OpenRace.Entities
         [MetaEntityAttr(Enabled = false)]
         public Instant CreatedAt { get; set; }
         public string FullName { get; set; }
-        public string Email { get; set; }
+        public string? Email { get; set; }
         public string? Phone { get; set; }
         public int Age { get; set; }
         public Gender Gender { get; set; }
@@ -50,6 +51,8 @@ namespace OpenRace.Entities
         public Duration? RaceResult { get; set; }
         
         public bool Subscribed { get; set; } = true;
+        
+        public string? RegisteredBy { get; set; }
         
         //https://entityframeworkcore.com/knowledge-base/53063181/ef-core-database-specific-columns-to-nested-object
         [MetaEntityAttr(Enabled = false)]

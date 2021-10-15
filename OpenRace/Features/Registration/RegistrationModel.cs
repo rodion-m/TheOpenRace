@@ -32,7 +32,7 @@ namespace OpenRace.Features.Registration
 
         [Required]
         [Display(Name = "Возраст")]
-        //[Range(7, 120)]
+        [Range(1, 120)]
         [FromForm(Name = "age")] 
         public int Age { get; set; }
         
@@ -41,9 +41,9 @@ namespace OpenRace.Features.Registration
         [FromForm(Name = "gender")]
         public string? Gender { get; set; }
         
-        [Required]
+        //[Required]
         [Display(Name = "Email")]
-        [EmailValidation.Email]
+        //[EmailValidation.Email]
         [FromForm(Name = "email")]
         [MaxLength(50)]
         public string? Email { get; set; }
@@ -64,5 +64,10 @@ namespace OpenRace.Features.Registration
         [FromForm(Name = "referer")]
         [MaxLength(200)]
         public string? Referer { get; set; }
+        
+        [Display(Name = "Регистратор")]
+        [FromForm(Name = "registeredBy")]
+        [MaxLength(200)]
+        public string? RegisteredBy { get; set; }
     }
 }

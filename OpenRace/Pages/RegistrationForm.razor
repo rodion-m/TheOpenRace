@@ -1,7 +1,11 @@
 @page "/registration"
 @using Microsoft.Extensions.Logging
 @using OpenRace.Features.Registration
+@using System.Globalization
 
+@inherits OpenRace.Features.Auth.ComponentBaseWithSession
+
+@inject AppConfig AppConfig
 @inject NavigationManager NavigationManager
 @inject RegistrationService RegistrationService
 @inject ILogger<RegistrationForm> Logger
@@ -9,78 +13,107 @@
 
 <h2>Регистрация на забег в поддержку строительства храма святого князя Владимира в Новогиреево</h2>
 <h5>ПО ВСЕМ ВОПРОСАМ ОБРАЩАТЬСЯ ПО ТЕЛЕФОНУ: <a href="tel:+79645522761">8-964-552-27-61</a> Дмитрий</h5>
-
-<EditForm Model="@model" OnValidSubmit="@HandleValidSubmit">
-	<DataAnnotationsValidator/>
-
-	<label>
-		Имя: <InputText @bind-Value="model.FirstName"></InputText>
-	</label>
-	<br/>
-	<label>
-		Фамилия: <InputText @bind-Value="model.LastName"></InputText>
-	</label>
-	<br/>
-	<label>
-		Отчество: <InputText @bind-Value="model.PatronymicName"></InputText>
-	</label>
-	<br/>
-	<label>
-		Возраст: <InputNumber @bind-Value="model.Age"></InputNumber>
-	</label>
-	<p>
-		<label>
-			Вы:
-			<InputSelect @bind-Value="model.Gender">
-				<option value="">Выбор</option>
-				<option value="Male">Мужчина</option>
-				<option value="Female">Женщина</option>
-			</InputSelect>
-		</label>
-	</p>
-	<br/>
-	<label>Email: <InputText @bind-Value="model.Email"></InputText></label>
-	<br/>
-	<label>Phone: <InputText @bind-Value="model.Phone"></InputText></label>
-	<p>
-		<label>
-			Дистанция:
-			<br/>
-			<InputRadioGroup  @bind-Value="model.DistanceKm">
-				@foreach (var (distance, caption) in _distances)
-				{
-					var id = $"distance_{distance}";
-					<InputRadio id="@id" Value="@distance.ToString()"/>
-					<label for="@id">@caption</label>
-					<br/>
-				}
-			</InputRadioGroup>
-		</label>
-	</p>
-
-	<ValidationSummary/>
-	<input class="btn btn-primary" type="submit" value="Отправить">
-</EditForm>
+@if (Session.IsAuthorized())
+{
+	<EditForm Model="@model" OnValidSubmit="@HandleValidSubmit">
+		<DataAnnotationsValidator/>
+		<table>
+			<tr>
+				<td>Имя:</td>
+				<td>
+					<InputText class="form-control" @bind-Value="model.FirstName"></InputText>
+				</td>
+			</tr>
+			<tr>
+				<td>Фамилия:</td>
+				<td>
+					<InputText class="form-control" @bind-Value="model.LastName"></InputText>
+				</td>
+			</tr>
+			<tr>
+				<td>Отчество:</td>
+				<td>
+					<InputText class="form-control" @bind-Value="model.PatronymicName"></InputText>
+				</td>
+			</tr>
+			<tr>
+				<td>Возраст:</td>
+				<td>
+					<InputNumber class="form-control" @bind-Value="model.Age"></InputNumber>
+				</td>
+			</tr>
+			<tr>
+				<td>Пол:</td>
+				<td>
+					<InputSelect class="form-control" @bind-Value="model.Gender">
+						<option value="">Выбор</option>
+						<option value="Male">Мужской</option>
+						<option value="Female">Женский</option>
+					</InputSelect>
+				</td>
+			</tr>
+			<tr>
+				<td>Email:</td>
+				<td>
+					<InputText class="form-control" @bind-Value="model.Email"></InputText>
+				</td>
+			</tr>
+			<tr>
+				<td>Phone:</td>
+				<td>
+					<InputText class="form-control" @bind-Value="model.Phone"></InputText>
+				</td>
+			</tr>
+			<tr>
+				<td>Дистанция:</td>
+				<td>
+					<InputSelect class="form-control" @bind-Value="model.DistanceKm">
+						<option value="">Выбор</option>
+					@foreach (var distanceInfo in AppConfig.AvailableDistances)
+					{
+						<option value="@(distanceInfo.DistanceKm)" class="form-control">@(distanceInfo.Name)</option>
+					}
+					</InputSelect>
+				</td>
+			</tr>
+			<tr>
+				<ValidationSummary/>
+			</tr>
+			<tr>
+				<input class="btn btn-outline-primary" type="submit" value="Зарегистрироваться">
+			</tr>
+		</table>
+	</EditForm>
+}
+else
+{
+	@NavigationManager.ToAbsoluteUri(AppConfig.SiteUrl)
+}
 
 @code {
-
-	private readonly (int distance, string caption)[] _distances = new[]
-	{
-		(1, "1 километр (для детей): \"семейная\""),
-		(2, "2 километра: \"я попробую\""),
-		(5, "5 километров: \"я смогу\""),
-		(10, "10 километров: \"профи\""),
-	};
-
 	public const string Identifier = "registration";
-
 	private readonly RegistrationModel model = new();
 
+	private bool _busy;
 	private async Task HandleValidSubmit()
 	{
-		ToastService.ShowInfo("Регистрация...");
-		var redirectUri = await RegistrationService.RegisterAndCreatePayment(model, NavigationManager.BaseUri);
-		NavigationManager.NavigateTo(redirectUri);
+		if(_busy) return;
+		try
+		{
+			_busy = true;
+			ToastService.ShowInfo("Регистрация...");
+			if (Session.IsAuthorized())
+			{
+				model.RegisteredBy = Session.UserName;
+			}
+			var redirectUri = await RegistrationService.RegisterMemberWithoutPayment(
+				model, NavigationManager.BaseUri, CultureInfo.CurrentCulture);
+			NavigationManager.NavigateTo(redirectUri);
+		}
+		finally
+		{
+			_busy = false;
+		}
 	}
 
 }

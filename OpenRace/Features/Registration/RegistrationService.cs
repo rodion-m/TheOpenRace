@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Coravel.Queuing.Interfaces;
 using Nito.AsyncEx;
 using NodaTime;
 using OpenRace.Data.Ef;
@@ -9,6 +11,7 @@ using OpenRace.Data.Specifications;
 using OpenRace.Entities;
 using OpenRace.Features.Payment;
 using OpenRace.Data;
+using OpenRace.Features.Communication;
 
 namespace OpenRace.Features.Registration
 {
@@ -18,14 +21,18 @@ namespace OpenRace.Features.Registration
         private readonly PaymentService _paymentService;
         private readonly IClock _clock;
         private readonly AppConfig _appConfig;
+        private readonly IEmailService _emailService;
+        private readonly IQueue _queue;
 
         public RegistrationService(MembersRepository members, PaymentService paymentService, IClock clock,
-            AppConfig appConfig)
+            AppConfig appConfig, IEmailService emailService, IQueue queue)
         {
             _members = members;
             _paymentService = paymentService;
             _clock = clock;
             _appConfig = appConfig;
+            _emailService = emailService;
+            _queue = queue;
         }
 
         private static readonly AsyncLock _registrationMutex = new();
@@ -67,6 +74,17 @@ namespace OpenRace.Features.Registration
             return redirectUri;
         }
 
+        public async Task<string> RegisterMemberWithoutPayment(RegistrationModel model, string hostUrl, CultureInfo cultureInfo)
+        {
+            var (_, member) = await RegisterMember(model, null);
+            if (member.Email != null)
+            {
+                _queue.QueueAsyncTask(() => _emailService.SendMembershipConfirmedMessage(member, cultureInfo));
+            }
+
+            var redirectUri =$"{hostUrl}confirmed/{member.Id}";
+            return redirectUri;
+        }
         public async Task<(RegistrationResult, Member)> RegisterMember(RegistrationModel model,
             Entities.Payment? payment)
         {
@@ -92,7 +110,8 @@ namespace OpenRace.Features.Registration
                 model.Age,
                 Enum.Parse<Gender>(model.Gender!),
                 int.Parse(model.DistanceKm!) * 1000,
-                model.Referer
+                model.Referer,
+                model.RegisteredBy
             )
             {
                 Payment = payment
