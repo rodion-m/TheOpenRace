@@ -18,15 +18,15 @@
 
 @if (Session.IsAuthorized())
 {
-	if (_memberLaps != null)
+	if (_membersLaps != null)
 	{
 		var color = ColorTranslator.ToHtml(_distanceInfo.Color);
 		var hMemberCount = 8;
 		var offset = 0;
 		<table style="border: 5px">
-			@for (var members = _memberLaps.Take(hMemberCount); 
+			@for (var members = _membersLaps.Take(hMemberCount); 
 				members.Any(); 
-				members = _memberLaps.Skip(offset).Take(hMemberCount))
+				members = _membersLaps.Skip(offset).Take(hMemberCount))
 			{
 				offset += hMemberCount;
 				<tr style="border: 5px">
@@ -62,9 +62,12 @@ else
 	[Parameter]
 	public int Distance { get; set; }
 	
-	private List<MemberLap>? _memberLaps;
+	private List<MemberLap>? _membersLaps;
+	
 	private System.Threading.Timer? _timerUpdateRunners;
-	private readonly TimeSpan _timerUpdateRunnersInterval = TimeSpan.FromSeconds(10);
+	private readonly Duration _minUpdateInterval = Duration.FromSeconds(1);
+	private readonly Duration _timerUpdateRunnersInterval = Duration.FromSeconds(10);
+	private Instant _lastUpdatedAt = Instant.MinValue;
 	private bool _disposed;
 	
 	private record MemberLap(int MemberNumber, int Lap);
@@ -80,15 +83,18 @@ else
 	{
 		_timerUpdateRunners = new System.Threading.Timer(async _ =>
 		{
-			if (!_disposed)
+			if (!_disposed && !_busy)
 			{
-				await InvokeAsync(async () =>
+				if (Clock.GetCurrentInstant() - _lastUpdatedAt > _minUpdateInterval)
 				{
-					ToastService.ShowInfo("Обновление...");
-					await UpdateRunners();
-				});
+					await InvokeAsync(async () =>
+					{
+						ToastService.ShowInfo("Обновление...");
+						await UpdateRunners();
+					});
+				}
 			}
-		}, null, _timerUpdateRunnersInterval, _timerUpdateRunnersInterval);
+		}, null, _timerUpdateRunnersInterval.ToTimeSpan(), _timerUpdateRunnersInterval.ToTimeSpan());
 	}
 
 	private async Task UpdateRunners()
@@ -96,7 +102,7 @@ else
 		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
 			.ToLookupAsync(it => it.MemberNumber);
 		 //TODO отсеивать отсутствующих бегунов
-		_memberLaps = events
+		_membersLaps = events
 			.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
 			.OrderBy(it => it.Last().TimeStamp)
 			.Select(memberEvents =>
@@ -107,6 +113,7 @@ else
 
 		if (!_disposed)
 		{
+			_lastUpdatedAt = Clock.GetCurrentInstant();
 			StateHasChanged();
 		}
 	}
