@@ -5,6 +5,7 @@
 @using OpenRace.Entities
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
+@implements IDisposable
 
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
@@ -60,15 +61,34 @@ else
 @code {
 	[Parameter]
 	public int Distance { get; set; }
-
+	
 	private List<MemberLap>? _memberLaps;
-
+	private System.Threading.Timer? _timerUpdateRunners;
+	private readonly TimeSpan _timerUpdateRunnersInterval = TimeSpan.FromSeconds(10);
+	private bool _disposed;
+	
 	private record MemberLap(int MemberNumber, int Lap);
 	
 	protected override async Task OnAuthorizedAsync()
 	{
 		await base.OnAuthorizedAsync();
 		await UpdateRunners();
+		CreateUpdateRunnersTimer();
+	}
+
+	private void CreateUpdateRunnersTimer()
+	{
+		_timerUpdateRunners = new System.Threading.Timer(async _ =>
+		{
+			if (!_disposed)
+			{
+				await InvokeAsync(async () =>
+				{
+					ToastService.ShowInfo("Обновление...");
+					await UpdateRunners();
+				});
+			}
+		}, null, _timerUpdateRunnersInterval, _timerUpdateRunnersInterval);
 	}
 
 	private async Task UpdateRunners()
@@ -84,8 +104,11 @@ else
 			var lapCount = memberEvents.Count(it => it.EventType == EventType.LapComplete);
 			return new MemberLap(memberEvents.Key, lapCount + 1);
 		}).ToList();
-		
-		StateHasChanged();
+
+		if (!_disposed)
+		{
+			StateHasChanged();
+		}
 	}
 
 	private bool _busy;
@@ -171,4 +194,9 @@ else
 		return false;
 	}
 
+	public void Dispose()
+	{
+		_disposed = true;
+		_timerUpdateRunners?.Dispose();
+	}
 }
