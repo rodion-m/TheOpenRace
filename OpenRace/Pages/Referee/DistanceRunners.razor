@@ -61,6 +61,7 @@ else
 	private readonly Duration _minUpdateInterval = Duration.FromSeconds(1);
 	private readonly Duration _timerUpdateRunnersInterval = Duration.FromSeconds(10);
 	private Instant _lastUpdatedAt = Instant.MinValue;
+	private bool _updating;
 	private bool _disposed;
 
 	private record MemberLap(int MemberNumber, int NextLap)
@@ -95,24 +96,37 @@ else
 
 	private async Task UpdateRunners()
 	{
-		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
-			.ToLookupAsync(it => it.MemberNumber);
-
-		_membersLaps = events
-			.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
-			.OrderBy(it => it.Last().TimeStamp)
-			.Select(memberEvents =>
+		if (_updating)
 		{
-			var lapCount = memberEvents.Count(it => it.EventType == EventType.LapComplete);
-			return new MemberLap(memberEvents.Key, lapCount + 1);
-		}).ToList();
-
-		_membersLaps = FilterNotComeRunners(_membersLaps);
-
-		if (!_disposed)
+			return;
+		}
+		try
 		{
-			_lastUpdatedAt = Clock.GetCurrentInstant();
-			StateHasChanged();
+			_updating = true;
+			
+			var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
+				.ToLookupAsync(it => it.MemberNumber);
+
+			_membersLaps = events
+				.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
+				.OrderBy(it => it.Last().TimeStamp)
+				.Select(memberEvents =>
+				{
+					var lapCount = memberEvents.Count(it => it.EventType == EventType.LapComplete);
+					return new MemberLap(memberEvents.Key, lapCount + 1);
+				}).ToList();
+
+			_membersLaps = FilterNotComeRunners(_membersLaps);
+
+			if (!_disposed)
+			{
+				_lastUpdatedAt = Clock.GetCurrentInstant();
+				StateHasChanged();
+			}
+		}
+		finally
+		{
+			_updating = false;
 		}
 	}
 
