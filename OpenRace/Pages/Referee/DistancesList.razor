@@ -70,11 +70,19 @@
 			<hr/>
             <hr/>
 			<hr/>
+			<hr/>
+			<hr/>
+			<hr/>
+			<hr/>
+			<hr/>
+			<hr/>
+			<hr/>
+			<hr/>
+			<hr/>
 			<tr>
 				СТЕРЕТЬ ВСЕ ДАННЫЕ О ЗАБЕГЕ
 				<button class="btn btn-danger" 
-				        @onclick="ShowClearRaceToast"
-				        @ondblclick="ClearRace" disabled="@IsDisabled">
+				        @onclick="ClearRace" disabled="@IsDisabled">
 					ОБНУЛИТЬ ЗАБЕГ
 				</button>
 			</tr>
@@ -166,8 +174,15 @@ else
 		ToastService.ShowSuccess("Забег завершен!");
 	}
 
+	bool _clearRacePressed;
 	private async Task ClearRace()
 	{
+		if (!_clearRacePressed)
+		{
+			ShowClearRaceToast();
+			_clearRacePressed = true;
+			return;
+		}
 		ToastService.ShowWarning("Обнуление забега...");
 		await EventsRepo.DeleteEvents(AppConfig.RaceId);
 		ToastService.ShowSuccess("Забег ОБНУЛЕН!");
@@ -175,7 +190,7 @@ else
 
 	private void ShowClearRaceToast()
 	{
-		ToastService.ShowWarning("Опасно! Кликните ДВА раза по кнопке ОБНУЛИТЬ.");
+		ToastService.ShowWarning("Опасно! Нажмите еще раз по кнопке ОБНУЛИТЬ.");
 	}
 
 }

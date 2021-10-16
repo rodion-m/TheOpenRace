@@ -17,6 +17,7 @@ using OpenRace.Features.Communication;
 using OpenRace.Features.Payment;
 using OpenRace.Features.Registration;
 using OpenRace.Data;
+using OpenRace.Jobs;
 using OpenRace.ServicesConfigs;
 using Sentry.AspNetCore;
 using Serilog;
@@ -68,7 +69,10 @@ namespace OpenRace
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddQueue();
             services.AddCache();
-
+            
+            services.AddScheduler();
+            services.AddTransient<SendEmailNotificationJob>();
+            
             services.AddSingleton<IClock>(SystemClock.Instance);
             services.AddSingleton(AppConfig.Current);
             services.AddSingleton(secrets.YouKassaSecrets);
@@ -108,6 +112,8 @@ namespace OpenRace
             app.UseSentryTracing();
             app.UseRequestLocalization("ru-RU");
 
+            InitScheduler(app);
+
             //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -118,6 +124,17 @@ namespace OpenRace
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
                 endpoints.MapControllers();
+            });
+        }
+
+        private void InitScheduler(IApplicationBuilder app)
+        {
+            var provider = app.ApplicationServices;
+            provider.UseScheduler(scheduler =>
+            {
+                scheduler.Schedule<SendEmailNotificationJob>()
+                    //.DailyAt(9, 0);
+                    .EveryMinute();
             });
         }
     }
