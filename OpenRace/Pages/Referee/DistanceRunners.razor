@@ -2,7 +2,9 @@
 @using OpenRace.Data.Ef
 @using System.Drawing
 @using NodaTime
+@using OpenRace.Data
 @using OpenRace.Entities
+@using OpenRace.Features.Events
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 @implements IDisposable
@@ -10,7 +12,8 @@
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
 @inject MembersRepository MembersRepo
-@inject EventsRepository EventsRepo
+@inject EventsDbRepository EventsRepo
+@inject EventsSubscriptionManager EventsSubscriptionManager
 @inject IToastService ToastService
 @inject IClock Clock
 
@@ -83,7 +86,46 @@ else
 	{
 		await base.OnAuthorizedAsync();
 		await UpdateRunners();
+
+		SubscribeToEventsUpdate();
 		CreateUpdateRunnersTimer();
+		
+		await RemoveBadLaps();
+	}
+
+	int _subscriptionId;
+	private void SubscribeToEventsUpdate()
+	{
+		_subscriptionId = EventsSubscriptionManager.Subscribe(Distance, NewEventReceived);
+	}
+
+	private void NewEventReceived(RaceEvent @event)
+	{
+		if (!_disposed && !_busy)
+		{
+		}
+	}
+
+	private async Task RemoveBadLaps()
+	{
+		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
+			.ToLookupAsync(it => it.MemberNumber);
+		foreach (var memberEvents in events)
+		{
+			var raceEvents = memberEvents.Where(it => it.EventType != EventType.RaceFinished)
+				.OrderBy(it => it.TimeStamp)
+				.ToArray();
+			for (var i = 1; i < raceEvents.Length; i++)
+			{
+				var prevEvent = raceEvents[i - 1];
+				var e = raceEvents[i];
+				var interval = e.TimeStamp - prevEvent.TimeStamp;
+				if (interval < Duration.FromSeconds(60))
+				{
+					await EventsRepo.DeleteAsync(e);
+				}
+			}
+		}
 	}
 
 	private void CreateUpdateRunnersTimer()
@@ -117,7 +159,7 @@ else
 			var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
 				.ToLookupAsync(it => it.MemberNumber);
 
-			_membersLaps = events
+			var newMembersLaps = events
 				.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
 				.OrderBy(it => it.Last().TimeStamp)
 				.Select(memberEvents =>
@@ -126,12 +168,16 @@ else
 					return new MemberLap(memberEvents.Key, lapCount + 1);
 				}).ToList();
 
-			_membersLaps = FilterNotComeRunners(_membersLaps);
-
+			newMembersLaps = FilterNotComeRunners(newMembersLaps);
+			
 			if (!_disposed)
 			{
 				_lastUpdatedAt = Clock.GetCurrentInstant();
-				StateHasChanged();
+				if(_membersLaps == null || !_membersLaps.SequenceEqual(newMembersLaps))
+				{
+					_membersLaps = newMembersLaps;
+					StateHasChanged();
+				}
 			}
 		}
 		finally
@@ -160,8 +206,9 @@ else
 
 	private bool _busy;
 	private AppConfig.DistanceInfo _distanceInfo => AppConfig.GetDistanceInfo(Distance);
-	private async Task LapComplete(int number, int newLap)
+	private async Task LapComplete(int memberNumber, int newLap)
 	{
+		// Заметка. Проблему с отключением кнопки можно решать на клиенте через JS: https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-5.0
 		if(CancelIfBusy()) return;
 		try
 		{
@@ -169,7 +216,7 @@ else
 			await EventsRepo.AddAsync(new RaceEvent(
 				Guid.NewGuid(), 
 				AppConfig.RaceId, 
-				number, 
+				memberNumber, 
 				EventType.LapComplete, 
 				Clock.GetCurrentInstant(),
 				Session.UserName,
@@ -178,20 +225,20 @@ else
 			var remainingLaps = _distanceInfo.LapsCount - newLap;
 			if (remainingLaps > 0)
 			{
-				ToastService.ShowInfo($"Участник {number} пошел на {newLap}-й круг");
+				ToastService.ShowInfo($"Участник {memberNumber} пошел на {newLap}-й круг");
 			}
 			else
 			{
 				await EventsRepo.AddAsync(new RaceEvent(
 					Guid.NewGuid(), 
 					AppConfig.RaceId, 
-					number, 
+					memberNumber, 
 					EventType.RaceFinished, 
 					Clock.GetCurrentInstant(),
 					Session.UserName,
 					Distance)
 				);
-				ToastService.ShowSuccess($"Участник {number} завершил гонку!");
+				ToastService.ShowSuccess($"Участник {memberNumber} завершил гонку!");
 			}
 			await UpdateRunners();
 		}
@@ -244,6 +291,7 @@ else
 	public void Dispose()
 	{
 		_disposed = true;
+		EventsSubscriptionManager.Unsubscribe(Distance, _subscriptionId);
 		_timerUpdateRunners?.Dispose();
 	}
 }

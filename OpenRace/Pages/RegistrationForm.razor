@@ -52,12 +52,12 @@
 					</InputSelect>
 				</td>
 			</tr>
-			<tr>
-				<td>Email:</td>
-				<td>
-					<InputText class="form-control" @bind-Value="model.Email"></InputText>
-				</td>
-			</tr>
+			@* <tr> *@
+			@* 	<td>Email:</td> *@
+			@* 	<td> *@
+			@* 		<InputText class="form-control" @bind-Value="model.Email"></InputText> *@
+			@* 	</td> *@
+			@* </tr> *@
 			<tr>
 				<td>Phone:</td>
 				<td>
@@ -106,6 +106,7 @@ else
 			{
 				model.RegisteredBy = Session.UserName;
 			}
+			model.Email = " "; //TODO
 			var redirectUri = await RegistrationService.RegisterMemberWithoutPayment(
 				model, NavigationManager.BaseUri, CultureInfo.CurrentCulture);
 			NavigationManager.NavigateTo(redirectUri);

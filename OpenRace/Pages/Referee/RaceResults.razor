@@ -11,7 +11,7 @@
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
 @inject MembersRepository MembersRepo
-@inject EventsRepository EventsRepo
+@inject EventsDbRepository EventsRepo
 @inject IToastService ToastService
 @inject IClock Clock
 
@@ -61,25 +61,30 @@
 	if (results != null)
 	{
 		var distanceInfo = AppConfig.GetDistanceInfo(_filter.Distance!.Value);
-		<h2>Итоги забега на @(distanceInfo.DistanceMt / 1000) км. (кругов: @(distanceInfo.LapsCount))</h2>
+		<h2>Итоги забега на @(distanceInfo.DistanceMt / 1000) км. (круги: @(distanceInfo.LapsCount))</h2>
 		<Table TableItem="RaceResult" Items="results" PageSize="100" ColumnReorder="true">
 			<Column TableItem="RaceResult" Title="Место" Field="@(x => x.Position!)" Sortable="true" Filterable="true" Width="5%"/>
 			<Column TableItem="RaceResult" Title="Результат" Field="@(x => x.RaceTimeAsString!)" Sortable="true" Filterable="true" Width="15%">
 			</Column>
-			<Column TableItem="RaceResult" Title="Луч. кр." Field="@(x => x.BestLap!)" Sortable="true" Filterable="true" Width="10%">
+			<Column TableItem="RaceResult" Title="Луч. кр." Field="@(x => x.BestLap!)" Sortable="true" Filterable="true" Width="5%">
 				<Template>
 					<span>@(context.BestLap != null ? FormatDuration(context.BestLap.Value) : "DNF")</span>
 				</Template>
 			</Column>
+			<Column TableItem="RaceResult" Title="Луч. кр." Field="@(x => x.WorstLap!)" Sortable="true" Filterable="true" Width="10%">
+            	<Template>
+            		<span>@(context.WorstLap != null ? FormatDuration(context.WorstLap.Value) : "DNF")</span>
+            	</Template>
+            </Column>
 			<Column TableItem="RaceResult" Title="Зав. кругов" Field="@(x => x.FinishedLaps)" Sortable="true" Filterable="true" Width="10%"/>
 			<Column TableItem="RaceResult" Title="Финиш" Field="@(x => x.FinishedLaps)" Sortable="true" Filterable="true" Width="10%">
 				<Template>
 					<span>@(context.IsAllLapsComplete ? "Да" : "Нет")</span>
 				</Template>
 			</Column>
-			<Column TableItem="RaceResult" Title="Имя" Field="@(x => x.Member.FullName)" Sortable="true" Filterable="true" Width="25%"/>
+			<Column TableItem="RaceResult" Title="Имя" Field="@(x => x.Member.FullName)" Sortable="true" Filterable="true" Width="20%"/>
 			<Column TableItem="RaceResult" Title="№" Field="@(x => x.Member.Number!)" Sortable="true" Filterable="true" Width="5%"/>
-			<Column TableItem="RaceResult" Title="Возраст" Field="@(x => x.Member.Age)" Sortable="true" Filterable="true" Width="10%"/>
+			<Column TableItem="RaceResult" Title="Возраст" Field="@(x => x.Member.Age)" Sortable="true" Filterable="true" Width="5%"/>
 			<Column TableItem="RaceResult" Title="Пол" Field="@(x => x.Member.Gender)" Sortable="true" Filterable="true" Width="5%">
 				<Template>
 					@{
@@ -88,6 +93,7 @@
 					}
 				</Template>
 			</Column>
+			<Column TableItem="RaceResult" Title="Начало" Field="@(x => x.StartedAt)" Sortable="true" Filterable="true" Width="10%"/>
 			<Pager ShowPageNumber="true" ShowTotalCount="true"/>
 		</Table>
 	}
@@ -123,9 +129,9 @@ else
 	}
 
 	private record RaceResult(
-		Member Member, Duration? RaceTime, int FinishedLaps, int TotalLaps, Duration? BestLap)
+		Member Member, Duration? RaceTime, int FinishedLaps, int TotalLaps, Duration? BestLap, Duration? WorstLap, Instant StartedAt)
 	{
-		public bool IsAllLapsComplete => FinishedLaps == TotalLaps;
+		public bool IsAllLapsComplete => FinishedLaps >= TotalLaps;
 		public int? Position { get; set; }
 		public string RaceTimeAsString
 		{
@@ -157,7 +163,7 @@ else
 		var events = await EventsRepo.GetMemberAndEvents(
 			AppConfig.RaceId, distance.Value, gender, children == null ? null : children == 1);
 		results = events.Select(memberEvents => CreateRaceResult(memberEvents.Key, memberEvents.Value))
-			.OrderByDescending(it => it.FinishedLaps)
+			.OrderByDescending(it => Math.Min(it.FinishedLaps, it.TotalLaps)) //TODO fix
 			.ThenBy(it => it.RaceTime)
 			.ThenBy(it => it.BestLap)
 			.ToList();
@@ -178,14 +184,23 @@ else
 			laps.Add((@event, @event.TimeStamp - events[i - 1].TimeStamp));
 		}
 		//Берем за финиш время последнего круга
-		var raceFinished = laps.Any() ? laps[^1].@event : (RaceEvent?) null;
-		var bestLap = laps.Any() ? laps.Min(it => it.duration) : (Duration?) null;
+		RaceEvent? raceFinished = null;
+		Duration? bestLap = null, worstLap = null, averageLap = null;
+		if (laps.Any())
+		{
+			raceFinished = laps[^1].@event;
+			bestLap = laps.Min(it => it.duration);
+			worstLap = laps.Max(it => it.duration);
+			// averageLap = laps.Average(it => it.duration);
+		}
 		return new RaceResult(
 			member,
 			raceFinished?.TimeStamp - raceStarted.TimeStamp,
 			events.Count(it => it.EventType == EventType.LapComplete),
 			AppConfig.GetDistanceInfo(raceStarted.Distance).LapsCount,
-			bestLap
+			bestLap,
+			worstLap,
+			raceStarted.TimeStamp
 		);
 	}
 

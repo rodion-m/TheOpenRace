@@ -8,9 +8,9 @@ using OpenRace.Entities;
 
 namespace OpenRace.Data.Ef
 {
-    public class EventsRepository : EfRepository<RaceEvent>
+    public class EventsDbRepository : EfRepository<RaceEvent>
     {
-        public EventsRepository(AppDbContext dbContext) : base(dbContext)
+        public EventsDbRepository(AppDbContext dbContext) : base(dbContext)
         {
         }
 
@@ -45,8 +45,8 @@ namespace OpenRace.Data.Ef
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<Dictionary<Member, RaceEvent[]>> GetMemberAndEvents(Guid raceId, int distance, Gender? gender,
-            bool? children)
+        public async Task<Dictionary<Member, RaceEvent[]>> GetMemberAndEvents(
+            Guid raceId, int distance, Gender? gender, bool? children)
         {
             // TODO переписать в SQL
             // var q = from m in _dbContext.Members.AsQueryable()

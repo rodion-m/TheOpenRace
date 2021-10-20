@@ -61,9 +61,9 @@ namespace OpenRace
             DefaultCultureInfo: new CultureInfo("ru"),
             AvailableDistances: new DistanceInfo[]
             {
-                new(1000, new Range[] { new(1, 30), new(131, 140) }, Color.Green, "1 километр (для детей): \"семейная\""),
-                new(2000, new Range[] { new(31, 60), new(141, 150) }, Color.Orange, "2 километра: \"я попробую\""),
-                new(5000, new Range[] { new(61, 100) }, Color.DodgerBlue, "5 километров: \"я смогу\""),
+                new(1000, new Range[] { new(1, 30), new(131, 140), new(201, 250) }, Color.Green, "1 километр (для детей): \"семейная\""),
+                new(2000, new Range[] { new(31, 60), new(301, 350) }, Color.Orange, "2 километра: \"я попробую\""),
+                new(5000, new Range[] { new(61, 100), new(501, 550)  }, Color.DodgerBlue, "5 километров: \"я смогу\""),
                 new(10_000, new Range[] { new(101, 130) }, Color.Red, "10 километров: \"профи\""),
             }
         );
