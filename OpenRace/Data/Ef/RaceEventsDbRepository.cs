@@ -8,9 +8,9 @@ using OpenRace.Entities;
 
 namespace OpenRace.Data.Ef
 {
-    public class EventsDbRepository : EfRepository<RaceEvent>
+    public class RaceEventsDbRepository : EfRepository<RaceEvent>
     {
-        public EventsDbRepository(AppDbContext dbContext) : base(dbContext)
+        public RaceEventsDbRepository(AppDbContext dbContext) : base(dbContext)
         {
         }
 

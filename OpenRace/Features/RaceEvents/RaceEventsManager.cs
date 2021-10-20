@@ -1,59 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Coravel.Queuing;
 using Coravel.Queuing.Interfaces;
 using OpenRace.Data;
 using OpenRace.Data.Ef;
 using OpenRace.Entities;
 
-namespace OpenRace.Features.Events
+namespace OpenRace.Features.RaceEvents
 {
-    public class EventsManager
+    public class RaceEventsManager
     {
-        private readonly EventsDbRepository _repo;
-        private readonly EventsInMemoryRepository _inMemoryRepo;
+        private readonly RaceEventsDbRepository _repo;
+        private readonly RaceEventsCache _eventsCache;
         private readonly IQueue _queue;
-        private readonly EventsSubscriptionManager _subscriptionManager;
+        private readonly RaceEventsSubscriptionManager _subscriptionManager;
 
-        public EventsManager(
-            EventsDbRepository repo, 
-            EventsInMemoryRepository inMemoryRepo, 
+        public RaceEventsManager(
+            RaceEventsDbRepository repo, 
+            RaceEventsCache eventsCache, 
             IQueue queue, 
-            EventsSubscriptionManager subscriptionManager)
+            RaceEventsSubscriptionManager subscriptionManager)
         {
             _repo = repo;
-            _inMemoryRepo = inMemoryRepo;
+            _eventsCache = eventsCache;
             _queue = queue;
             _subscriptionManager = subscriptionManager;
         }
 
         public Task AddAsync(RaceEvent @event)
         {
-            _inMemoryRepo.Add(@event);
+            _eventsCache.Add(@event);
             if (@event.EventType != EventType.RaceFinished)
             {
-                _subscriptionManager.Notify(@event.Distance, @event);
+                _subscriptionManager.NotifyEventAdded(@event);
             }
 
             _queue.QueueAsyncTask(() => _repo.AddAsync(@event));
             return Task.CompletedTask;
         }
 
-        public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, int distance)
+        public async IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, int distance)
         {
             //TODO
-            // if (_inMemoryRepo.TryGetEvents(raceId, distance, out var events))
+            // if (_eventsCache.TryGetEvents(raceId, distance, out var events))
             // {
             //     
             // }
             // else
             // {
+            //      //await WaitPendingOperations();
             //     var dbEvents = await _repo.GetRaceEvents(raceId, distance).ToListAsync();
-            //     _inMemoryRepo.Fill(dbEvents);
+            //     _eventsCache.Fill(dbEvents);
             // }
-            return _repo.GetRaceEvents(raceId, distance);
+            await WaitPendingOperations();
+            await foreach (var raceEvent in _repo.GetRaceEvents(raceId, distance))
+            {
+                yield return raceEvent;
+            }
         }
 
         /// <summary>
@@ -61,6 +64,7 @@ namespace OpenRace.Features.Events
         /// </summary>
         public async Task<RaceEvent?> GetLastEventByCreatorOrNull(string creatorName)
         {
+            //TODO get from cache
             await WaitPendingOperations();
             return await _repo.GetLastEventByCreatorOrNull(creatorName);
         }
@@ -77,9 +81,19 @@ namespace OpenRace.Features.Events
 
         public Task DeleteAsync(RaceEvent @event)
         {
-            _inMemoryRepo.Delete(@event);
+            _eventsCache.Delete(@event);
+            _subscriptionManager.NotifyEventDeleted(@event);
             _queue.QueueAsyncTask(() => _repo.DeleteAsync(@event));
             return Task.CompletedTask;
+        }
+
+        public void ClearCache(bool notifyListeners)
+        {
+            _eventsCache.Clear();
+            if (notifyListeners)
+            {
+                _subscriptionManager.OnAllEventsShouldBeUpdated();
+            }
         }
     }
 }

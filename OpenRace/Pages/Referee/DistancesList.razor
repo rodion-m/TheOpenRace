@@ -4,13 +4,15 @@
 @using System.Drawing
 @using NodaTime
 @using OpenRace.Entities
+@using OpenRace.Features.RaceEvents
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
 @inject MembersRepository MembersRepo
-@inject EventsDbRepository EventsRepo
+@inject RaceEventsDbRepository EventsRepo
+@inject RaceEventsManager RaceEventsManager
 @inject IToastService ToastService
 @inject IClock Clock
 
@@ -149,6 +151,7 @@ else
 			member.Distance)
 		);
 		await EventsRepo.AddAll(events);
+		RaceEventsManager.ClearCache(true);
 		ToastService.ShowSuccess($"Запущено бегунов: {members.Count}");
 	}
 
@@ -171,6 +174,7 @@ else
 				)
 			);
 		await EventsRepo.AddAll(raceFinishedEvents);
+		RaceEventsManager.ClearCache(true);
 		ToastService.ShowSuccess("Забег завершен!");
 	}
 
@@ -186,6 +190,7 @@ else
 		ToastService.ShowWarning("Обнуление забега...");
 		await EventsRepo.DeleteEvents(AppConfig.RaceId);
 		ToastService.ShowSuccess("Забег ОБНУЛЕН!");
+		RaceEventsManager.ClearCache(true);
 	}
 
 	private void ShowClearRaceToast()

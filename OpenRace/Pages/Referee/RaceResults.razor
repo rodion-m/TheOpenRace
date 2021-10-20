@@ -11,7 +11,7 @@
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
 @inject MembersRepository MembersRepo
-@inject EventsDbRepository EventsRepo
+@inject RaceEventsDbRepository EventsRepo
 @inject IToastService ToastService
 @inject IClock Clock
 
@@ -129,7 +129,15 @@ else
 	}
 
 	private record RaceResult(
-		Member Member, Duration? RaceTime, int FinishedLaps, int TotalLaps, Duration? BestLap, Duration? WorstLap, Instant StartedAt)
+		Member Member,
+		Duration? RaceTime,
+		int FinishedLaps, 
+		int TotalLaps, 
+		Duration? BestLap, 
+		Duration? WorstLap, 
+		Duration? AverageLap, 
+		Instant StartedAt
+	)
 	{
 		public bool IsAllLapsComplete => FinishedLaps >= TotalLaps;
 		public int? Position { get; set; }
@@ -191,7 +199,7 @@ else
 			raceFinished = laps[^1].@event;
 			bestLap = laps.Min(it => it.duration);
 			worstLap = laps.Max(it => it.duration);
-			// averageLap = laps.Average(it => it.duration);
+			averageLap = Duration.FromTicks(laps.Average(it => it.duration.TotalTicks));
 		}
 		return new RaceResult(
 			member,
@@ -200,6 +208,7 @@ else
 			AppConfig.GetDistanceInfo(raceStarted.Distance).LapsCount,
 			bestLap,
 			worstLap,
+			averageLap,
 			raceStarted.TimeStamp
 		);
 	}

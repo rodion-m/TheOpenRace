@@ -1,10 +1,12 @@
 @page "/referee/distances/{distance:int}"
 @using OpenRace.Data.Ef
 @using System.Drawing
+@using Coravel.Scheduling.Schedule.Interfaces
+@using Microsoft.Extensions.Logging
 @using NodaTime
 @using OpenRace.Data
 @using OpenRace.Entities
-@using OpenRace.Features.Events
+@using OpenRace.Features.RaceEvents
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 @implements IDisposable
@@ -12,11 +14,13 @@
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
 @inject MembersRepository MembersRepo
-@inject EventsDbRepository EventsRepo
-@inject EventsManager EventsManager
-@inject EventsSubscriptionManager EventsSubscriptionManager
+@inject RaceEventsDbRepository EventsRepo
+@inject RaceEventsManager RaceEventsManager
+@inject IScheduler Scheduler
+@inject RaceEventsSubscriptionManager RaceEventsSubscriptionManager
 @inject IToastService ToastService
 @inject IClock Clock
+@inject ILogger<DistanceRunners> Logger
 
 <h1>Участники</h1>
 
@@ -29,9 +33,17 @@
 			<tr style="border: 5px">
 				@foreach (var lap in _membersLaps)
 				{
-					var color = lap.IsCome ? distanceColor : ColorTranslator.ToHtml(Color.LightSlateGray);
-					<button class="btn" @onclick="() => LapComplete(lap.MemberNumber, lap.NextLap)"
-					        style="background-color: @color; width: 90px; height: 70px; margin: 5px">
+					var color = lap.IsNextLapReady && lap.IsCome ? distanceColor : ColorTranslator.ToHtml(Color.LightSlateGray);
+					if (_buttonsLocked)
+					{
+						color = ColorTranslator.ToHtml(Color.DimGray);
+					}
+					<button class="btn" 
+					        @ontouchstart="() => CompleteLap(lap, false)"
+					        @onmousedown="() => CompleteLap(lap, false)"
+					        style="background-color: @color; width: 70px; height: 70px; margin: 5px"
+					        disabled="@_buttonsLocked"
+					        >
 						<span style="font-weight: bold; font-size: 150%">@(lap.MemberNumber)</span> <sup>⬤@(lap.NextLap)</sup>
 					</button>
 				}
@@ -71,12 +83,16 @@ else
 	
 	private List<MemberLap>? _membersLaps;
 	
+	private System.Threading.Timer? _timerUpdateRunners;
+	private readonly Duration _timerUpdateRunnersInterval = Duration.FromSeconds(10);
 	private bool _updating;
 	private bool _disposed;
+	private bool _buttonsLocked;
 
-	private record MemberLap(int MemberNumber, int NextLap)
+	private record MemberLap(int MemberNumber, int NextLap, Instant LastLapCompletedOn)
 	{
-		public bool IsCome { get; set; }
+		public bool IsCome { get; set; } //TODO убрать
+		public bool IsNextLapReady { get; set; }
 	}
 	
 	protected override async Task OnAuthorizedAsync()
@@ -85,17 +101,54 @@ else
 		await UpdateRunners();
 
 		SubscribeToEventsUpdate();
-		
-		await RemoveBadLaps();
+		CreateUpdateRunnersTimer();
+	}
+	
+	private void CreateUpdateRunnersTimer()
+	{
+		_timerUpdateRunners = new System.Threading.Timer(_ =>
+		{
+			if (!_disposed && !_busy)
+			{
+				if (UpdateMembersReadiness())
+				{
+					if(!_disposed) InvokeAsync(StateHasChanged);
+				}
+			}
+		}, null, _timerUpdateRunnersInterval.ToTimeSpan(), _timerUpdateRunnersInterval.ToTimeSpan());
+	}
+
+	private bool UpdateMembersReadiness()
+	{
+		if (_membersLaps == null) return false;
+		var now = Clock.GetCurrentInstant();
+		var readyLaps = _membersLaps.Where(it => now - it.LastLapCompletedOn >= AppConfig.MinLapDuration)
+			.ToArray();
+		if (readyLaps.Length != _membersLaps.Count(it => it.IsNextLapReady))
+		{
+			foreach (var lap in readyLaps)
+			{
+				lap.IsNextLapReady = true;
+			}
+			return true;
+		}
+		return false;
 	}
 
 	int _subscriptionId;
 	private void SubscribeToEventsUpdate()
 	{
-		_subscriptionId = EventsSubscriptionManager.Subscribe(Distance, NewEventReceived);
+		_subscriptionId = RaceEventsSubscriptionManager.Subscribe(
+			Distance, 
+			EventAdded,
+			EventDeleted,
+			() =>
+			{
+				if(!_disposed) InvokeAsync(UpdateRunners);
+			});
 	}
 
-	private void NewEventReceived(RaceEvent @event)
+	private void EventDeleted(RaceEvent @event)
 	{
 		if(_disposed) return;
 		if(_membersLaps == null) return;
@@ -105,66 +158,63 @@ else
 			if(!_disposed) InvokeAsync(UpdateRunners);
 		}
 	}
-
-	private async Task RemoveBadLaps()
+	private void EventAdded(RaceEvent @event)
 	{
-		var events = await EventsRepo.GetRaceEvents(AppConfig.RaceId, Distance)
-			.ToLookupAsync(it => it.MemberNumber);
-		foreach (var memberEvents in events)
+		if(_disposed) return;
+		if(_membersLaps == null) return;
+		if(@event.CreatorName == Session.UserName) return;
+		if (_membersLaps.Any(it => it.MemberNumber == @event.MemberNumber))
 		{
-			var raceEvents = memberEvents.Where(it => it.EventType != EventType.RaceFinished)
-				.OrderBy(it => it.TimeStamp)
-				.ToArray();
-			for (var i = 1; i < raceEvents.Length; i++)
-			{
-				var prevEvent = raceEvents[i - 1];
-				var e = raceEvents[i];
-				var interval = e.TimeStamp - prevEvent.TimeStamp;
-				if (interval < Duration.FromSeconds(60))
-				{
-					await EventsRepo.DeleteAsync(e);
-				}
-			}
+			if(!_disposed) InvokeAsync(UpdateRunners);
 		}
 	}
-
+	
 	private async Task UpdateRunners()
 	{
-		if (_updating)
-		{
-			return;
-		}
+		if (_updating) return;
 		try
 		{
 			_updating = true;
 			
-			var events = await EventsManager.GetRaceEvents(AppConfig.RaceId, Distance)
+			var events = await RaceEventsManager.GetRaceEvents(AppConfig.RaceId, Distance)
 				.ToLookupAsync(it => it.MemberNumber);
 
 			var newMembersLaps = events
 				.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
 				.OrderBy(it => it.Key)
 				//.OrderBy(it => it.Last().TimeStamp)
-				.Select(memberEvents =>
-				{
-					var lapCount = memberEvents.Count(it => it.EventType == EventType.LapComplete);
-					return new MemberLap(memberEvents.Key, lapCount + 1);
-				}).ToList();
+				.Select(CreateMemberLap)
+				.ToList();
+			
+			SetNextLapReadiness(newMembersLaps);
 
 			newMembersLaps = FilterNotComeRunners(newMembersLaps);
 			
 			if (!_disposed)
 			{
-				if(_membersLaps == null || !_membersLaps.SequenceEqual(newMembersLaps))
-				{
-					_membersLaps = newMembersLaps;
-					if(!_disposed) StateHasChanged();
-				}
+				_membersLaps = newMembersLaps;
+				StateHasChanged();
 			}
 		}
 		finally
 		{
 			_updating = false;
+		}
+	}
+
+	private MemberLap CreateMemberLap(IEnumerable<RaceEvent> memberEvents)
+	{
+		var events = memberEvents as RaceEvent[] ?? memberEvents.ToArray();
+		var lapCount = events.Count(it => it.EventType == EventType.LapComplete);
+		return new MemberLap(events[0].MemberNumber, lapCount + 1, events[^1].TimeStamp);
+	}
+
+	private void SetNextLapReadiness(IEnumerable<MemberLap> laps)
+	{
+		var now = Clock.GetCurrentInstant();
+		foreach (var memberLap in laps)
+		{
+			memberLap.IsNextLapReady = now - memberLap.LastLapCompletedOn >= AppConfig.MinLapDuration;
 		}
 	}
 
@@ -188,31 +238,35 @@ else
 
 	private bool _busy;
 	private AppConfig.DistanceInfo _distanceInfo => AppConfig.GetDistanceInfo(Distance);
-	private async Task LapComplete(int memberNumber, int newLap)
+	private async Task CompleteLap(MemberLap lapEvent, bool ignoreLapDurationChecking)
 	{
 		// Заметка. Проблему с отключением кнопки можно решать на клиенте через JS: https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-5.0
+		if (!lapEvent.IsNextLapReady && !ignoreLapDurationChecking)
+		{
+			ToastService.ShowWarning("Если это ок, то нажмите здесь для подтверждения.", "Слишком быстрый круг!", 
+				() => InvokeAsync(() => CompleteLap(lapEvent, true)));
+			return;
+		}
 		if(CancelIfBusy()) return;
 		try
 		{
-			// TODO добавить проверку на дабл клик и мисклик по кнопке и убрать _busy
-			_busy = true;
 			var newLapEvent = new RaceEvent(
 				Guid.NewGuid(), 
 				AppConfig.RaceId, 
-				memberNumber, 
+				lapEvent.MemberNumber, 
 				EventType.LapComplete, 
 				Clock.GetCurrentInstant(),
 				Session.UserName,
 				Distance
 			);
-			await EventsManager.AddAsync(newLapEvent);
-			var remainingLaps = _distanceInfo.LapsCount - newLap;
+			await RaceEventsManager.AddAsync(newLapEvent);
+			var remainingLaps = _distanceInfo.LapsCount - lapEvent.NextLap;
 			if (remainingLaps == 0)
 			{
-				await EventsManager.AddAsync(new RaceEvent(
+				await RaceEventsManager.AddAsync(new RaceEvent(
 					Guid.NewGuid(), 
 					AppConfig.RaceId, 
-					memberNumber, 
+					lapEvent.MemberNumber, 
 					EventType.RaceFinished, 
 					Clock.GetCurrentInstant(),
 					Session.UserName,
@@ -221,9 +275,9 @@ else
 			}
 			UpdateMemberLapUi(newLapEvent);
 		}
-		finally
+		catch(Exception e)
 		{
-			_busy = false;
+			Logger.LogError(e, "Error while completing a lap");
 		}
 	}
 
@@ -234,16 +288,20 @@ else
 		var nextLap = memberLap.NextLap + 1;
 		if (nextLap > _distanceInfo.LapsCount)
 		{
+			_membersLaps.RemoveAt(index); //TODO Не надо удалять. Нужно просто отключать и добавить кнопку "обновить порядок"
 			ToastService.ShowSuccess($"Участник {newLapEvent.MemberNumber} завершил гонку!");
 		}
 		else
 		{
-			memberLap = memberLap with {NextLap = nextLap};
+			memberLap = new MemberLap(memberLap.MemberNumber, nextLap, newLapEvent.TimeStamp)
+			{
+				IsCome = true,
+				IsNextLapReady = false
+			};
 			_membersLaps[index] = memberLap;
 			StateHasChanged();
 			//ToastService.ShowInfo($"Участник {memberNumber} пошел на {newLap}-й круг");
 		}
-		StateHasChanged();
 	}
 
 	private async Task CancelLastEvent()
@@ -253,22 +311,29 @@ else
 		{
 			_busy = true;
 			ToastService.ShowWarning("Отмена последнего действия...");
-			var @event = await EventsManager.GetLastEventByCreatorOrNull(Session.UserName);
-			if (@event != null && @event.EventType != EventType.RaceStarted)
-			{
-				await EventsManager.DeleteAsync(@event);
-				ToastService.ShowSuccess($"Действие {@event.EventType} отменено для участника {@event.MemberNumber}");
-				if (@event.EventType == EventType.RaceFinished)
-				{
-					_busy = false;
-					await CancelLastEvent();
-				}
-			}
-			else
+			LockButtons();
+			var @event = await RaceEventsManager.GetLastEventByCreatorOrNull(Session.UserName);
+			if (@event == null || @event.EventType == EventType.RaceStarted)
 			{
 				ToastService.ShowError("Нет действий");
+				return;
 			}
+
+			await RaceEventsManager.DeleteAsync(@event);
+			if (@event.EventType == EventType.RaceFinished)
+			{
+				_busy = false;
+				await CancelLastEvent();
+				return;
+			}
+			_buttonsLocked = false;
 			await UpdateRunners();
+			ToastService.ShowSuccess($"Действие {@event.EventType} отменено для участника {@event.MemberNumber}");
+		}
+		catch
+		{
+			UnlockButtons();
+			throw;
 		}
 		finally
 		{
@@ -289,6 +354,20 @@ else
 	public void Dispose()
 	{
 		_disposed = true;
-		EventsSubscriptionManager.Unsubscribe(Distance, _subscriptionId);
+		RaceEventsSubscriptionManager.Unsubscribe(Distance, _subscriptionId);
+		_timerUpdateRunners?.Dispose();
 	}
+
+	private void LockButtons()
+	{
+		_buttonsLocked = true;
+		StateHasChanged();
+	}
+	
+	private void UnlockButtons()
+	{
+		_buttonsLocked = false;
+		StateHasChanged();
+	}
+
 }

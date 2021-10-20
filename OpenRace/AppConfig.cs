@@ -15,7 +15,8 @@ namespace OpenRace
         string SenderEmailAddress,
         Guid RaceId,
         CultureInfo DefaultCultureInfo,
-        AppConfig.DistanceInfo[] AvailableDistances)
+        AppConfig.DistanceInfo[] AvailableDistances,
+        Duration MinLapDuration)
     {
         public string GetRaceDateTimeAsString(CultureInfo? cultureInfo = null) =>
             RaceDateTime.ToString("d MMMM yyyy HH:mm", cultureInfo ?? CultureInfo.CurrentUICulture);
@@ -65,7 +66,8 @@ namespace OpenRace
                 new(2000, new Range[] { new(31, 60), new(301, 350) }, Color.Orange, "2 километра: \"я попробую\""),
                 new(5000, new Range[] { new(61, 100), new(501, 550)  }, Color.DodgerBlue, "5 километров: \"я смогу\""),
                 new(10_000, new Range[] { new(101, 130) }, Color.Red, "10 километров: \"профи\""),
-            }
+            },
+            Duration.FromMinutes(3)
         );
 
         public string GetLink(string location) => $"{Hostname}{location}";

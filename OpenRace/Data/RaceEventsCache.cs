@@ -7,7 +7,7 @@ using RaceId = System.Guid;
 
 namespace OpenRace.Data
 {
-    public class EventsInMemoryRepository
+    public class RaceEventsCache
     {
         private readonly ConcurrentDictionary<RaceId, ConcurrentDictionary<int, ConcurrentBag<RaceEvent>>> _eventsDict = new();
 
@@ -45,5 +45,7 @@ namespace OpenRace.Data
                 }
             }
         }
+
+        public void Clear() => _eventsDict.Clear();
     }
 }
