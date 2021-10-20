@@ -24,7 +24,6 @@ namespace OpenRace.Data.Ef
             => _dbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId && it.Distance == distance)
                 .OrderBy(it => it.TimeStamp)
-                .ThenBy(it => it.MemberNumber)
                 .AsAsyncEnumerable();
 
         public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, EventType eventType)

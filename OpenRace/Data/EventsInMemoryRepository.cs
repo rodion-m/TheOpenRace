@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using OpenRace.Entities;
 using RaceId = System.Guid;
@@ -10,7 +11,7 @@ namespace OpenRace.Data
     {
         private readonly ConcurrentDictionary<RaceId, ConcurrentDictionary<int, ConcurrentBag<RaceEvent>>> _eventsDict = new();
 
-        public Task AddEvent(RaceEvent @event)
+        public void Add(RaceEvent @event)
         {
             _eventsDict.AddOrUpdate(@event.RaceId,
                 _ =>
@@ -32,7 +33,17 @@ namespace OpenRace.Data
                     );
                     return raceEvents;
                 });
-            return Task.CompletedTask;
+        }
+
+        public void Delete(RaceEvent @event)
+        {
+            if (_eventsDict.TryGetValue(@event.RaceId, out var raceEvents))
+            {
+                if (raceEvents.TryGetValue(@event.Distance, out var distanceEvents))
+                {
+                    raceEvents[@event.Distance] = new ConcurrentBag<RaceEvent>(distanceEvents.Where(it => it.Id != @event.Id));
+                }
+            }
         }
     }
 }

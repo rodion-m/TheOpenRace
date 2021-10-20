@@ -80,11 +80,11 @@ namespace OpenRace
             services.AddSingleton(secrets.AwsSecrets);
             services.AddSingleton<ConnectionChecker>();
             services.AddSingleton<EventsSubscriptionManager>();
+            services.AddSingleton<EventsInMemoryRepository>();
             services.AddSingleton<EmailTemplates>();
             services.AddSingleton<IEmailService, AmazonSESEmailService>();
             services.AddScoped<MembersRepository>();
             services.AddScoped<EventsDbRepository>();
-            services.AddScoped<EventsInMemoryRepository>();
             services.AddScoped<EventsManager>();
             services.AddScoped(typeof(EfRepository<>));
             services.AddScoped<RegistrationService>();
