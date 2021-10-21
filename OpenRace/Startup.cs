@@ -86,6 +86,7 @@ namespace OpenRace
             services.AddScoped<MembersRepository>();
             services.AddScoped<RaceEventsDbRepository>();
             services.AddScoped<RaceEventsManager>();
+            services.AddScoped<RaceEventsFixer>();
             services.AddScoped(typeof(EfRepository<>));
             services.AddScoped<RegistrationService>();
             services.AddScoped<PaymentService>();

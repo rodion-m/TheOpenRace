@@ -5,6 +5,7 @@
 @using NodaTime
 @using OpenRace.Entities
 @using BlazorTable
+@using OpenRace.Features.RaceEvents
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 
@@ -14,6 +15,7 @@
 @inject RaceEventsDbRepository EventsRepo
 @inject IToastService ToastService
 @inject IClock Clock
+@inject RaceEventsFixer RaceEventsFixer
 
 <h1>Результаты забега</h1>
 
@@ -71,7 +73,12 @@
 					<span>@(context.BestLap != null ? FormatDuration(context.BestLap.Value) : "DNF")</span>
 				</Template>
 			</Column>
-			<Column TableItem="RaceResult" Title="Луч. кр." Field="@(x => x.WorstLap!)" Sortable="true" Filterable="true" Width="10%">
+			<Column TableItem="RaceResult" Title="Ср. кр." Field="@(x => x.AverageLap!)" Sortable="true" Filterable="true" Width="10%">
+                <Template>
+                    <span>@(context.AverageLap != null ? FormatDuration(context.AverageLap.Value) : "DNF")</span>
+                </Template>
+            </Column>
+			<Column TableItem="RaceResult" Title="Худ. кр." Field="@(x => x.WorstLap!)" Sortable="true" Filterable="true" Width="10%">
             	<Template>
             		<span>@(context.WorstLap != null ? FormatDuration(context.WorstLap.Value) : "DNF")</span>
             	</Template>
@@ -93,7 +100,6 @@
 					}
 				</Template>
 			</Column>
-			<Column TableItem="RaceResult" Title="Начало" Field="@(x => x.StartedAt)" Sortable="true" Filterable="true" Width="10%"/>
 			<Pager ShowPageNumber="true" ShowTotalCount="true"/>
 		</Table>
 	}
@@ -128,15 +134,17 @@ else
 		}
 	}
 
-	private record RaceResult(
+	public record RaceResult(
 		Member Member,
+		int Distance,
 		Duration? RaceTime,
 		int FinishedLaps, 
 		int TotalLaps, 
 		Duration? BestLap, 
 		Duration? WorstLap, 
 		Duration? AverageLap, 
-		Instant StartedAt
+		Instant StartedAt,
+		Instant? FinishedAt
 	)
 	{
 		public bool IsAllLapsComplete => FinishedLaps >= TotalLaps;
@@ -173,10 +181,12 @@ else
 		results = events.Select(memberEvents => CreateRaceResult(memberEvents.Key, memberEvents.Value))
 			.OrderByDescending(it => Math.Min(it.FinishedLaps, it.TotalLaps)) //TODO fix
 			.ThenBy(it => it.RaceTime)
-			.ThenBy(it => it.BestLap)
 			.ToList();
 		for (var i = 0; i < results.Count; i++) results[i].Position = i + 1;
 
+		// await RaceEventsFixer.RemoveBadLaps(AppConfig.RaceId, distance.Value, AppConfig.MinLapDuration);
+		// await RaceEventsFixer.AddExtraAverageLaps(AppConfig.RaceId, results);
+		
 		StateHasChanged();
 	}
 
@@ -203,16 +213,17 @@ else
 		}
 		return new RaceResult(
 			member,
+			_filter.Distance!.Value,
 			raceFinished?.TimeStamp - raceStarted.TimeStamp,
 			events.Count(it => it.EventType == EventType.LapComplete),
 			AppConfig.GetDistanceInfo(raceStarted.Distance).LapsCount,
 			bestLap,
 			worstLap,
 			averageLap,
-			raceStarted.TimeStamp
+			raceStarted.TimeStamp,
+			raceFinished?.TimeStamp
 		);
 	}
-
 
 	public static string FormatDuration(Duration duration)
 	{

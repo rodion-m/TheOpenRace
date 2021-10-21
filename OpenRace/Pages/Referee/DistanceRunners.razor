@@ -40,9 +40,8 @@
 					{
 						color = ColorTranslator.ToHtml(Color.DimGray);
 					}
-					<button class="btn" 
-					        @* @ontouchstart="() => CompleteLap(lap, false)" (ДЛЯ ВКЛЮЧЕНИЯ МУЛЬТИТАЧА) *@
-					        @onmousedown="() => CompleteLap(lap, false)"
+					<button class="btn"
+					        @onclick="() => CompleteLap(lap, false)"
 					        style="background-color: @color; width: 70px; height: 70px; margin: 5px"
 					        disabled="@_buttonsLocked"
 					        >
