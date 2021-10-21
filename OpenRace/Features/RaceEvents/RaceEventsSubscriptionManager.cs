@@ -9,11 +9,12 @@ namespace OpenRace.Features.RaceEvents
     {
         public delegate void EventChanging(RaceEvent @event);
         
+        //TODO объединить eventAdded и eventDeleted в один класс, List заменить на Dictionary, subscriptionId сделать string
         private readonly ConcurrentDictionary<int /* distance */, List<EventChanging>> _eventAddedSubscriptions = new();
         private readonly ConcurrentDictionary<int /* distance */, List<EventChanging>> _eventDeletedSubscriptions = new();
         private readonly ConcurrentDictionary<(int, int), Action> _allEventsUpdatedSubscriptions = new();
         private readonly object _mutex = new();
-        
+
         public void OnAllEventsShouldBeUpdated()
         {
             // ReSharper disable once InconsistentlySynchronizedField
@@ -44,7 +45,7 @@ namespace OpenRace.Features.RaceEvents
                         return list;
                     });
 
-                var index = _eventAddedSubscriptions[distance].Count;
+                var index = _eventAddedSubscriptions[distance].Count - 1;
 
                 if (onAllEventsUpdated != null)
                 {
@@ -59,13 +60,13 @@ namespace OpenRace.Features.RaceEvents
             if(index < 0) return;
             lock (_mutex)
             {
-                DeleteEvent(_eventAddedSubscriptions, distance, index);
-                DeleteEvent(_eventDeletedSubscriptions, distance, index);
+                DeleteSubscription(_eventAddedSubscriptions, distance, index);
+                DeleteSubscription(_eventDeletedSubscriptions, distance, index);
                 _allEventsUpdatedSubscriptions.TryRemove((distance, index), out _);
             }
         }
 
-        private void DeleteEvent(ConcurrentDictionary<int, List<EventChanging>> subscriptions, int distance, int index)
+        private void DeleteSubscription(ConcurrentDictionary<int, List<EventChanging>> subscriptions, int distance, int index)
         {
             subscriptions.AddOrUpdate(distance, 
                 _ => new List<EventChanging>(), 

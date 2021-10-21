@@ -30,12 +30,11 @@ namespace OpenRace.Features.RaceEvents
         public Task AddAsync(RaceEvent @event)
         {
             _eventsCache.Add(@event);
+            _queue.QueueAsyncTask(() => _repo.AddAsync(@event));
             if (@event.EventType != EventType.RaceFinished)
             {
                 _subscriptionManager.NotifyEventAdded(@event);
             }
-
-            _queue.QueueAsyncTask(() => _repo.AddAsync(@event));
             return Task.CompletedTask;
         }
 
@@ -82,8 +81,8 @@ namespace OpenRace.Features.RaceEvents
         public Task DeleteAsync(RaceEvent @event)
         {
             _eventsCache.Delete(@event);
-            _subscriptionManager.NotifyEventDeleted(@event);
             _queue.QueueAsyncTask(() => _repo.DeleteAsync(@event));
+            _subscriptionManager.NotifyEventDeleted(@event);
             return Task.CompletedTask;
         }
 

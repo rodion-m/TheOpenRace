@@ -22,12 +22,13 @@
 @inject IClock Clock
 @inject ILogger<DistanceRunners> Logger
 
-<h1>Участники</h1>
+<h1>Участники @Distance км.</h1>
 
 @if (Session.IsAuthorized())
 {
 	if (_membersLaps != null)
 	{
+		//TODO здесь может быть поле ручного ввода номера участника
 		var distanceColor = ColorTranslator.ToHtml(_distanceInfo.Color);
 		<table style="border: 5px">
 			<tr style="border: 5px">
@@ -135,7 +136,7 @@ else
 		return false;
 	}
 
-	int _subscriptionId;
+	int _subscriptionId = -1;
 	private void SubscribeToEventsUpdate()
 	{
 		_subscriptionId = RaceEventsSubscriptionManager.Subscribe(
@@ -290,6 +291,7 @@ else
 		{
 			_membersLaps.RemoveAt(index); //TODO Не надо удалять. Нужно просто отключать и добавить кнопку "обновить порядок"
 			ToastService.ShowSuccess($"Участник {newLapEvent.MemberNumber} завершил гонку!");
+			StateHasChanged();
 		}
 		else
 		{
@@ -351,13 +353,6 @@ else
 		return false;
 	}
 
-	public void Dispose()
-	{
-		_disposed = true;
-		RaceEventsSubscriptionManager.Unsubscribe(Distance, _subscriptionId);
-		_timerUpdateRunners?.Dispose();
-	}
-
 	private void LockButtons()
 	{
 		_buttonsLocked = true;
@@ -370,4 +365,13 @@ else
 		StateHasChanged();
 	}
 
+	public void Dispose()
+	{
+		_disposed = true;
+		_timerUpdateRunners?.Dispose();
+		if (_subscriptionId != -1)
+		{
+			RaceEventsSubscriptionManager.Unsubscribe(Distance, _subscriptionId);
+		}
+	}
 }
