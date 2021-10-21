@@ -22,7 +22,7 @@
 @inject IClock Clock
 @inject ILogger<DistanceRunners> Logger
 
-<h1>Участники @Distance км.</h1>
+<h1>Участники @(_distanceInfo.DistanceKm) км.</h1>
 
 @if (Session.IsAuthorized())
 {
