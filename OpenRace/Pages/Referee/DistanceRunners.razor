@@ -7,6 +7,7 @@
 @using OpenRace.Data
 @using OpenRace.Entities
 @using OpenRace.Features.RaceEvents
+@using System.Collections.Concurrent
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 @implements IDisposable
@@ -40,7 +41,7 @@
 						color = ColorTranslator.ToHtml(Color.DimGray);
 					}
 					<button class="btn" 
-					        @ontouchstart="() => CompleteLap(lap, false)"
+					        @* @ontouchstart="() => CompleteLap(lap, false)" (ДЛЯ ВКЛЮЧЕНИЯ МУЛЬТИТАЧА) *@
 					        @onmousedown="() => CompleteLap(lap, false)"
 					        style="background-color: @color; width: 70px; height: 70px; margin: 5px"
 					        disabled="@_buttonsLocked"
@@ -89,6 +90,7 @@ else
 	private bool _updating;
 	private bool _disposed;
 	private bool _buttonsLocked;
+	private ConcurrentDictionary<int, bool> _executingMembers = new();
 
 	private record MemberLap(int MemberNumber, int NextLap, Instant LastLapCompletedOn)
 	{
@@ -260,10 +262,10 @@ else
 				Session.UserName,
 				Distance
 			);
-			await RaceEventsManager.AddAsync(newLapEvent);
 			var remainingLaps = _distanceInfo.LapsCount - lapEvent.NextLap;
 			if (remainingLaps == 0)
 			{
+				// TODO если завершен последний круг, добавлять сразу две записи одной транзакцией
 				await RaceEventsManager.AddAsync(new RaceEvent(
 					Guid.NewGuid(), 
 					AppConfig.RaceId, 
@@ -274,6 +276,7 @@ else
 					Distance)
 				);
 			}
+			await RaceEventsManager.AddAsync(newLapEvent);
 			UpdateMemberLapUi(newLapEvent);
 		}
 		catch(Exception e)
