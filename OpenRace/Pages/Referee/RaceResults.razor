@@ -178,7 +178,8 @@ else
 		ToastService.ShowInfo("Загрузка...");
 		var events = await EventsRepo.GetMemberAndEvents(
 			AppConfig.RaceId, distance.Value, gender, children == null ? null : children == 1);
-		results = events.Select(memberEvents => CreateRaceResult(memberEvents.Key, memberEvents.Value))
+		results = events
+			.Select(memberEvents => CreateRaceResult(memberEvents.Key, memberEvents.Value))
 			.OrderByDescending(it => Math.Min(it.FinishedLaps, it.TotalLaps)) //TODO fix
 			.ThenBy(it => it.RaceTime)
 			.ToList();

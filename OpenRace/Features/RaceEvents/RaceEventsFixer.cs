@@ -72,12 +72,13 @@ namespace OpenRace.Features.RaceEvents
                     .FirstOrDefaultAsync(it => it.MemberNumber == raceResult.Member.Number && it.EventType == RaceFinished);
                 if (finish != null)
                 {
-                    finish.TimeStamp = time;
+                    finish.TimeStamp = time + Duration.FromSeconds(1);
                     await _repo.UpdateAsync(finish);
                 }
                 else
                 {
-                    finish = new RaceEvent(Guid.NewGuid(), raceId, raceResult.Member.Number!.Value, RaceFinished, time,
+                    finish = new RaceEvent(
+                        Guid.NewGuid(), raceId, raceResult.Member.Number!.Value, RaceFinished, time + Duration.FromSeconds(1),
                         "_CORRECTOR_", raceResult.Distance);
                     await _repo.AddAsync(finish);
                 }
