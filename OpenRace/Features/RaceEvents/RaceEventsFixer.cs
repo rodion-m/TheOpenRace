@@ -49,9 +49,11 @@ namespace OpenRace.Features.RaceEvents
             _subscriptionManager.OnAllEventsShouldBeUpdated();
         }
 
-        public async Task AddExtraAverageLaps()
+        public async Task AddExtraAverageLaps(Guid raceId)
         {
-            
+            _repo.GetAllRaceEvents(raceId);
+            _eventsCache.Clear();
+            _subscriptionManager.OnAllEventsShouldBeUpdated();
         }
     }
 }

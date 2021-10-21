@@ -246,10 +246,21 @@ else
 		// Заметка. Проблему с отключением кнопки можно решать на клиенте через JS: https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-5.0
 		if (!lapEvent.IsNextLapReady && !ignoreLapDurationChecking)
 		{
-			ToastService.ShowWarning("Если это ок, то нажмите здесь для подтверждения.", "Слишком быстрый круг!", 
-				() => InvokeAsync(() => CompleteLap(lapEvent, true)));
+			var elapsed = Clock.GetCurrentInstant() - lapEvent.LastLapCompletedOn;
+			if (elapsed < AppConfig.MinLapDuration)
+			{
+				if (elapsed < AppConfig.MinLapDuration / 2)
+				{
+					ToastService.ShowError($"Невозможно пробежать круг за {elapsed.TotalSeconds:N0} сек.");
+				}
+				else
+				{
+					ToastService.ShowWarning("Если это ок, то нажмите здесь для подтверждения.", "Слишком быстрый круг!",
+						() => InvokeAsync(() => CompleteLap(lapEvent, true)));
+				}
+			}
 			return;
-		}
+			}
 		if(CancelIfBusy()) return;
 		try
 		{
