@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using OpenRace.Entities;
 using RaceId = System.Guid;
 
@@ -9,6 +8,7 @@ namespace OpenRace.Data
 {
     public class RaceEventsCache
     {
+        //TODO добавить версию для кеша каждой дистанции
         private readonly ConcurrentDictionary<RaceId, ConcurrentDictionary<int, ConcurrentBag<RaceEvent>>> _eventsDict = new();
 
         public void Add(RaceEvent @event)

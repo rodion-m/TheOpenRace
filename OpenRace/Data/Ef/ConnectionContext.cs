@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.EntityFrameworkCore;
-using OpenRace.Entities;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace OpenRace.Data.Ef
 {
