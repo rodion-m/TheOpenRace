@@ -38,6 +38,8 @@ namespace OpenRace.Features.RaceEvents
             return Task.CompletedTask;
         }
 
+
+
         public async IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, int distance)
         {
             //TODO
