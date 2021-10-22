@@ -14,7 +14,7 @@ namespace OpenRace.Data.Ef
         {
         }
 
-        public IAsyncEnumerable<RaceEvent> GetAllRaceEvents(Guid raceId)
+        public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId)
             => _dbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId)
                 .OrderBy(it => it.TimeStamp)
@@ -92,7 +92,7 @@ namespace OpenRace.Data.Ef
 
         public async Task DeleteEvents(Guid raceId)
         {
-            var events = await GetAllRaceEvents(raceId).ToListAsync();
+            var events = await GetRaceEvents(raceId).ToListAsync();
             await _dbContext.BulkDeleteAsync(events);
             await _dbContext.SaveChangesAsync();
         }

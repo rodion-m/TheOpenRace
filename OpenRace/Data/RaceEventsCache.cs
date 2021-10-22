@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using OpenRace.Entities;
 using RaceId = System.Guid;
@@ -16,7 +17,10 @@ namespace OpenRace.Data
             {
                 Events = events;
             }
-
+            public VersionedEvents(IEnumerable<RaceEvent> events)
+            {
+                Events = new ConcurrentDictionary<RaceId, RaceEvent>(events.ToDictionary(it => it.Id));
+            }
             public VersionedEvents(RaceEvent firstEvent)
             {
                 Events = new ConcurrentDictionary<RaceId, RaceEvent>(new Dictionary<RaceId, RaceEvent>()
@@ -46,8 +50,9 @@ namespace OpenRace.Data
 
         private readonly ConcurrentDictionary<RaceId, ConcurrentDictionary<int, VersionedEvents>> _eventsDict = new();
 
-        public void Add(RaceEvent @event)
+        public long Add(RaceEvent @event)
         {
+            long version = -1;
             _eventsDict.AddOrUpdate(@event.RaceId,
                 _ =>
                 {
@@ -60,27 +65,51 @@ namespace OpenRace.Data
                 }, (_, raceEvents) =>
                 {
                     raceEvents.AddOrUpdate(@event.Distance,
-                        _ => new VersionedEvents(@event), (_, distanceEvents) =>
+                        _ => new VersionedEvents(@event), 
+                        (_, distanceEvents) =>
                         {
-                            distanceEvents.Add(@event);
+                            version = distanceEvents.Add(@event);
                             return distanceEvents;
                         }
                     );
                     return raceEvents;
                 });
+            
+            return version;
         }
 
-        public void Delete(RaceEvent @event)
+        public long Delete(RaceEvent @event)
         {
+            long version = 0;
             if (_eventsDict.TryGetValue(@event.RaceId, out var raceEvents))
             {
                 if (raceEvents.TryGetValue(@event.Distance, out var distanceEvents))
                 {
-                    distanceEvents.Delete(@event.Id);
+                    version = distanceEvents.Delete(@event.Id);
                 }
             }
+
+            return version;
         }
 
         public void Clear() => _eventsDict.Clear();
+
+        public void Fill(RaceId raceId, List<RaceEvent> dbEvents)
+        {
+            _eventsDict[raceId] = CreateDistanceEventsCollection(dbEvents[0].Distance, dbEvents);
+        }
+
+        private static ConcurrentDictionary<int, VersionedEvents> CreateDistanceEventsCollection(
+            int distance, IEnumerable<RaceEvent> events)
+        {
+            return new ConcurrentDictionary<int, VersionedEvents>(
+                new Dictionary<int, VersionedEvents>()
+                {
+                    { distance, new VersionedEvents(events) }
+                }
+            );
+        }
+
+        public bool IsCached(RaceId raceId) => _eventsDict.ContainsKey(raceId);
     }
 }

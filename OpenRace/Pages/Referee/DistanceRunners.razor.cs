@@ -29,6 +29,7 @@ namespace OpenRace.Pages.Referee
             public bool IsCome { get; set; } //TODO убрать
             public bool IsNextLapReady { get; set; }
             public bool IsFinished { get; set; }
+            public bool IsProcessing { get; set; } //TODO этот статус будет задаваться при нажатии на плитку выключать кнопку во время проверки реальной доступности следующего круга
 
             public string GetColor(string distanceColor, bool isLocked)
             {
@@ -208,6 +209,7 @@ namespace OpenRace.Pages.Referee
             if (CancelIfBusy()) return;
             try
             {
+                //todo тут задавать lap.IsProcessing = true
                 //TODO lock на одну операцию для этого номера и доп. проверка на корректность круга из базы
                 //здесь должна быть проверка на версию дистанции по 
                 var newLapEvent = new RaceEvent(
@@ -230,8 +232,8 @@ namespace OpenRace.Pages.Referee
                         EventType.RaceFinished,
                         now.Plus(Duration.FromMilliseconds(1)),
                         Session.UserName,
-                        Distance)
-                    );
+                        Distance
+                    ));
                 }
 
                 await RaceEventsManager.AddAsync(newLapEvent);

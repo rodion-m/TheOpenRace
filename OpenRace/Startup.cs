@@ -92,6 +92,7 @@ namespace OpenRace
             services.AddScoped<PaymentService>();
             services.AddScoped<SessionService>();
             services.AddHostedService<BackgroundCheckConnect>();
+            //TODO добавить сюда запуск HostedService, который будет кешировать события для текущего raceId
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -137,6 +138,7 @@ namespace OpenRace
             var provider = app.ApplicationServices;
             provider.UseScheduler(scheduler =>
             {
+                
                 scheduler.Schedule<SendEmailNotificationJob>()
                     //.DailyAt(9, 0);
                     .EveryMinute();

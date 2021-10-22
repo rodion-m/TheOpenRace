@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Queuing.Interfaces;
 using OpenRace.Data;
@@ -38,10 +39,19 @@ namespace OpenRace.Features.RaceEvents
             return Task.CompletedTask;
         }
 
-
+        public async Task UpdateEventsCache(Guid raceId)
+        {
+            await WaitPendingOperations();
+            var dbEvents = await _repo.GetRaceEvents(raceId).ToListAsync();
+            _eventsCache.Fill(raceId, dbEvents);
+        }
 
         public async IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, int distance)
         {
+            if (!_eventsCache.IsCached(raceId))
+            {
+                await UpdateEventsCache(raceId);
+            }
             //TODO
             // if (_eventsCache.TryGetEvents(raceId, distance, out var events))
             // {
