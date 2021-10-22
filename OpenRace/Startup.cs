@@ -1,4 +1,5 @@
 using System;
+using BlazorDownloadFile;
 using Blazored.Toast;
 using BlazorPro.BlazorSize;
 using BlazorTable;
@@ -47,6 +48,7 @@ namespace OpenRace
             services.AddBlazoredToast();
             services.AddBlazorTable();
             services.AddMediaQueryService();
+            services.AddBlazorDownloadFile();
 
             services.ConfigureInvalidStateCustomResponse();
 

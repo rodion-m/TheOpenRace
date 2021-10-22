@@ -2,9 +2,11 @@
 @using OpenRace.Data.Ef
 @using System.Drawing
 @using System.Globalization
+@using BlazorDownloadFile
 @using NodaTime
 @using OpenRace.Entities
 @using BlazorTable
+@using MoreLinq
 @using OpenRace.Features.RaceEvents
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
@@ -16,6 +18,7 @@
 @inject IToastService ToastService
 @inject IClock Clock
 @inject RaceEventsFixer RaceEventsFixer
+@inject IBlazorDownloadFileService BlazorDownloadFileService
 
 <h1>Результаты забега</h1>
 
@@ -66,23 +69,20 @@
 		<h2>Итоги забега на @(distanceInfo.DistanceMt / 1000) км. (круги: @(distanceInfo.LapsCount))</h2>
 		<Table TableItem="RaceResult" Items="results" PageSize="100" ColumnReorder="true">
 			<Column TableItem="RaceResult" Title="Место" Field="@(x => x.Position!)" Sortable="true" Filterable="true" Width="5%"/>
-			<Column TableItem="RaceResult" Title="Результат" Field="@(x => x.RaceTimeAsString!)" Sortable="true" Filterable="true" Width="15%">
+			<Column TableItem="RaceResult" Title="Результат" Field="@(x => x.RaceTimeAsString)" Sortable="true" Filterable="true" Width="15%">
 			</Column>
-			<Column TableItem="RaceResult" Title="Луч. кр." Field="@(x => x.BestLap!)" Sortable="true" Filterable="true" Width="5%">
-				<Template>
-					<span>@(context.BestLap != null ? FormatDuration(context.BestLap.Value) : "DNF")</span>
-				</Template>
+			<Column TableItem="RaceResult" Title="Луч. кр." Field="@(x => x.BestLapAsString)" Sortable="true" Filterable="true" Width="5%">
 			</Column>
 			<Column TableItem="RaceResult" Title="Ср. кр." Field="@(x => x.AverageLap!)" Sortable="true" Filterable="true" Width="10%">
-                <Template>
-                    <span>@(context.AverageLap != null ? FormatDuration(context.AverageLap.Value) : "DNF")</span>
-                </Template>
-            </Column>
+				<Template>
+					<span>@(context.AverageLap != null ? FormatDuration(context.AverageLap.Value) : "DNF")</span>
+				</Template>
+			</Column>
 			<Column TableItem="RaceResult" Title="Худ. кр." Field="@(x => x.WorstLap!)" Sortable="true" Filterable="true" Width="10%">
-            	<Template>
-            		<span>@(context.WorstLap != null ? FormatDuration(context.WorstLap.Value) : "DNF")</span>
-            	</Template>
-            </Column>
+				<Template>
+					<span>@(context.WorstLap != null ? FormatDuration(context.WorstLap.Value) : "DNF")</span>
+				</Template>
+			</Column>
 			<Column TableItem="RaceResult" Title="Зав. кругов" Field="@(x => x.FinishedLaps)" Sortable="true" Filterable="true" Width="10%"/>
 			<Column TableItem="RaceResult" Title="Финиш" Field="@(x => x.FinishedLaps)" Sortable="true" Filterable="true" Width="10%">
 				<Template>
@@ -102,6 +102,7 @@
 			</Column>
 			<Pager ShowPageNumber="true" ShowTotalCount="true"/>
 		</Table>
+		<button class="btn btn-outline-primary" @onclick="ExportResultsToCsv">Сохранить результаты в таблицу CSV</button>
 	}
 }
 else
@@ -156,6 +157,15 @@ else
 				if (RaceTime == null) return "DNF";
 				if (IsAllLapsComplete) return FormatDuration(RaceTime.Value);
 				return $"{FormatDuration(RaceTime.Value)} DNF";
+			}
+		}
+		
+		public string BestLapAsString
+		{
+			get
+			{
+				if (BestLap == null) return "DNF";
+				return FormatDuration(BestLap.Value);
 			}
 		}
 	}
@@ -229,6 +239,31 @@ else
 	public static string FormatDuration(Duration duration)
 	{
 		return duration.ToString("hh:mm:ss", CultureInfo.InvariantCulture);
+	}
+
+	private async Task ExportResultsToCsv()
+	{
+		if (results == null) throw new NullReferenceException(nameof(results));
+		string childrenRu = _filter.Children switch {
+			0 => "взрослые",
+			1 => "дети",
+			_ => "все"
+		};
+		string genderRu = _filter.Gender switch {
+			Gender.Male => "М",
+			Gender.Female => "Ж",
+			_ => "МЖ"
+		};
+		var fileName = $"results_{_filter.Distance}m_{genderRu}_{childrenRu}.csv".ToLower();
+		var headers = new[] { "Место", "Имя", "Результат", "Луч. круг", "№", "Пол" };
+		var values = results.Select(it => new []
+		{
+			it.Position.ToString(), it.Member.FullName.Trim(), it.RaceTimeAsString, it.BestLapAsString, it.Member.Number?.ToString(), it.Member.Gender == Gender.Male ? "М" : "Ж"
+		});
+		var csv = new[] {headers}.Concat(values)
+			.Select(it => string.Join(',', it))
+			.ToDelimitedString("\r\n");
+		await BlazorDownloadFileService.DownloadFileFromText(fileName, csv, "text/plain");
 	}
 
 }
