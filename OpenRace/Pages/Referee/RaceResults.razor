@@ -66,6 +66,7 @@
 	if (results != null)
 	{
 		var distanceInfo = AppConfig.GetDistanceInfo(_filter.Distance!.Value);
+		<button class="btn btn-outline-primary" @onclick="ExportResultsToCsv">Сохранить результаты в таблицу CSV</button>
 		<h2>Итоги забега на @(distanceInfo.DistanceMt / 1000) км. (круги: @(distanceInfo.LapsCount))</h2>
 		<Table TableItem="RaceResult" Items="results" PageSize="100" ColumnReorder="true">
 			<Column TableItem="RaceResult" Title="Место" Field="@(x => x.Position!)" Sortable="true" Filterable="true" Width="5%"/>
@@ -102,7 +103,6 @@
 			</Column>
 			<Pager ShowPageNumber="true" ShowTotalCount="true"/>
 		</Table>
-		<button class="btn btn-outline-primary" @onclick="ExportResultsToCsv">Сохранить результаты в таблицу CSV</button>
 	}
 }
 else

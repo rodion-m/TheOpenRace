@@ -192,16 +192,16 @@ namespace OpenRace.Pages.Referee
         private bool _busy;
         private AppConfig.DistanceInfo _distanceInfo => AppConfig.GetDistanceInfo(Distance);
 
-        private async Task CompleteLap(MemberLap lapEvent, bool ignoreLapDurationChecking)
+        private async Task CompleteLap(MemberLap lapEvent, bool ignoreLapDurationChecking, Instant? timeStamp = null)
         {
             // Заметка. Проблему с отключением кнопки можно решать на клиенте через JS: https://docs.microsoft.com/en-us/aspnet/core/blazor/javascript-interoperability/?view=aspnetcore-5.0
-            var now = Clock.GetCurrentInstant();
+            timeStamp ??= Clock.GetCurrentInstant();
             if (!lapEvent.IsNextLapReady && !ignoreLapDurationChecking)
             {
-                var elapsed = now - lapEvent.LastLapCompletedOn;
+                var elapsed = timeStamp.Value - lapEvent.LastLapCompletedOn;
                 if (elapsed < AppConfig.MinLapDuration)
                 {
-                    ShowIncorrectLapWarning(elapsed, lapEvent);
+                    ShowIncorrectLapWarning(elapsed, lapEvent, timeStamp.Value);
                     return;
                 }
             }
@@ -217,7 +217,7 @@ namespace OpenRace.Pages.Referee
                     AppConfig.RaceId,
                     lapEvent.MemberNumber,
                     EventType.LapComplete,
-                    now,
+                    timeStamp.Value,
                     Session.UserName,
                     Distance
                 );
@@ -230,7 +230,7 @@ namespace OpenRace.Pages.Referee
                         AppConfig.RaceId,
                         lapEvent.MemberNumber,
                         EventType.RaceFinished,
-                        now.Plus(Duration.FromMilliseconds(1)),
+                        timeStamp.Value.Plus(Duration.FromMilliseconds(1)),
                         Session.UserName,
                         Distance
                     ));
@@ -245,7 +245,7 @@ namespace OpenRace.Pages.Referee
             }
         }
 
-        private void ShowIncorrectLapWarning(Duration elapsed, MemberLap lapEvent)
+        private void ShowIncorrectLapWarning(Duration elapsed, MemberLap lapEvent, Instant timeStamp)
         {
             if (elapsed < AppConfig.MinLapDuration / 2)
             {
@@ -255,7 +255,7 @@ namespace OpenRace.Pages.Referee
             {
                 ToastService.ShowWarning("Если это ок, то нажмите здесь для подтверждения.",
                     "Слишком быстрый круг!",
-                    () => InvokeAsync(() => CompleteLap(lapEvent, true)));
+                    () => InvokeAsync(() => CompleteLap(lapEvent, true, timeStamp)));
             }
         }
 

@@ -96,17 +96,17 @@ namespace OpenRace.Data
 
         public void Fill(RaceId raceId, List<RaceEvent> dbEvents)
         {
-            _eventsDict[raceId] = CreateDistanceEventsCollection(dbEvents[0].Distance, dbEvents);
+            _eventsDict[raceId] = CreateDistanceEventsCollection(dbEvents);
         }
 
-        private static ConcurrentDictionary<int, VersionedEvents> CreateDistanceEventsCollection(
-            int distance, IEnumerable<RaceEvent> events)
+        private ConcurrentDictionary<int,VersionedEvents> CreateDistanceEventsCollection(IEnumerable<RaceEvent> dbEvents)
         {
             return new ConcurrentDictionary<int, VersionedEvents>(
-                new Dictionary<int, VersionedEvents>()
-                {
-                    { distance, new VersionedEvents(events) }
-                }
+                dbEvents
+                    .GroupBy(it => it.Distance)
+                    .Select(distanceEvents => 
+                        (distance: distanceEvents.Key, events: new VersionedEvents(distanceEvents)))
+                    .ToDictionary(it => it.distance, it => it.events)
             );
         }
 
