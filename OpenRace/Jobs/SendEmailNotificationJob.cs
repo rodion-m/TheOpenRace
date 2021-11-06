@@ -36,9 +36,9 @@ namespace OpenRace.Jobs
 
         public async Task Invoke()
         {
-            var sendEmailsAt = _appConfig.RaceDateTime.Date.At(new LocalTime(9, 0));
-            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceDateTime.Zone);
-            if (now.Date != sendEmailsAt.Date || now.Hour != sendEmailsAt.Hour || now.Minute != sendEmailsAt.Minute) // TODO
+            var sendEmailsAt = _appConfig.NotifyMemberAt;
+            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartTime.Zone);
+            if (now.Date != sendEmailsAt.Date || now.Hour != sendEmailsAt.Hour || now.Minute != sendEmailsAt.Minute)
             {
                 return;
             }
