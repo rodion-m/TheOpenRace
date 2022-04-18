@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon;
@@ -9,28 +8,22 @@ using Amazon.SimpleEmail;
 using Amazon.SimpleEmail.Model;
 using Microsoft.Extensions.Logging;
 using MimeKit.Utils;
-using OpenRace.Entities;
-using OpenRace.Exceptions;
-using Serilog;
 
 namespace OpenRace.Features.Communication
 {
-    public class AmazonSESEmailService : IEmailService
+    public class AmazonSESEmailSender : IEmailSender
     {
         private readonly AppConfig _appConfig;
-        private readonly ILogger<AmazonSESEmailService> _logger;
-        private readonly EmailTemplates _templates;
+        private readonly ILogger<AmazonSESEmailSender> _logger;
         private readonly BasicAWSCredentials _credentials;
 
-        public AmazonSESEmailService(
+        public AmazonSESEmailSender(
             AppConfig appConfig, 
-            ILogger<AmazonSESEmailService> logger, 
-            EmailTemplates templates,
+            ILogger<AmazonSESEmailSender> logger, 
             AwsSecrets awsSecrets)
         {
             _appConfig = appConfig;
             _logger = logger;
-            _templates = templates;
             _credentials = new BasicAWSCredentials(awsSecrets.AccessKey, awsSecrets.SecretKey);
         }
         public async Task Send(string subject, string htmlBody, string receiver)
@@ -68,23 +61,6 @@ namespace OpenRace.Features.Communication
             {
                 _logger.LogError(ex, "Error while sending email to {Subject}", subject);
             }
-        }
-
-        public Task SendMembershipConfirmedMessage(Member member, CultureInfo cultureInfo)
-        {
-            if (string.IsNullOrWhiteSpace(member.Email) || !EmailValidation.EmailValidator.Validate(member.Email))
-            {
-                throw new ArgumentException($"Некорректный email: {member.Email}");
-            }
-            var html = _templates.GetTemplate1Html(
-                "Участие в забеге подтверждено!", 
-                $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
-                $"Имя участника: {member.FullName}<br/>Вы бежите под номером: {member.Number}",
-                "Ждем вас!",
-                _appConfig.SiteUrl,
-                _appConfig.GetLink($"unsubscribe/{member.Id}")
-            );
-            return Send($"Участник забега № {member.Number} {member.FullName}", html,  member.Email);
         }
     }
 }

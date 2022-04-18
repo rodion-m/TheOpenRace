@@ -16,7 +16,8 @@ namespace OpenRace.Entities
             int age, 
             Gender gender, 
             int distance, 
-            string? referer, string? registeredBy)
+            string? referer, 
+            string? registeredBy)
         {
             Id = id;
             CreatedAt = createdAt;
@@ -32,7 +33,7 @@ namespace OpenRace.Entities
 
         public const int AdultsAge = 17;
 
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
         [MetaEntityAttr(Enabled = false)]
         public Instant CreatedAt { get; set; }
         public string FullName { get; set; }

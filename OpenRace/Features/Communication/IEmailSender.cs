@@ -4,8 +4,8 @@ using OpenRace.Entities;
 
 namespace OpenRace.Features.Communication
 {
-    public interface IEmailService
+    public interface IEmailSender
     {
-        Task SendMembershipConfirmedMessage(Member member, CultureInfo cultureInfo);
+        Task Send(string subject, string htmlBody, string receiver);
     }
 }

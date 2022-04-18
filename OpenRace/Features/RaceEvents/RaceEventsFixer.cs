@@ -14,7 +14,7 @@ namespace OpenRace.Features.RaceEvents
     public class RaceEventsFixer
     {
         public RaceEventsFixer(
-            RaceEventsDbRepository repo,
+            RaceEventsRepository repo,
             RaceEventsCache eventsCache,
             RaceEventsSubscriptionManager subscriptionManager)
         {
@@ -23,7 +23,7 @@ namespace OpenRace.Features.RaceEvents
             _subscriptionManager = subscriptionManager;
         }
         
-        private readonly RaceEventsDbRepository _repo;
+        private readonly RaceEventsRepository _repo;
         private readonly RaceEventsCache _eventsCache;
         private readonly RaceEventsSubscriptionManager _subscriptionManager;
         
@@ -63,7 +63,7 @@ namespace OpenRace.Features.RaceEvents
                 for (int i = 0; i < remainingLaps; i++)
                 {
                     time += raceResult.AverageLap!.Value;
-                    newRaceEvents.Add(new RaceEvent(Guid.NewGuid(), raceId, raceResult.Member.Number!.Value, LapComplete, time, "_CORRECTOR_", raceResult.Distance));
+                    newRaceEvents.Add(new RaceEvent(Guid.NewGuid(), raceId, raceResult.Member.Number!.Value, LapCompleted, time, "_CORRECTOR_", raceResult.Distance));
                 }
 
                 await _repo.AddAll(newRaceEvents);

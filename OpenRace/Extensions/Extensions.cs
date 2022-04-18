@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace OpenRace
+namespace OpenRace.Extensions
 {
     public static class Extensions
     {
@@ -38,12 +38,12 @@ namespace OpenRace
             return output.IsPhoneNumber();
         }
 
-        private static Regex phoneRegex = new Regex(@"\+79\d{2}\d{7}", RegexOptions.Compiled);
+        private static readonly Regex _phoneRegex = new(@"\+79\d{2}\d{7}", RegexOptions.Compiled);
         public static bool IsPhoneNumber(this string input, bool strict = true)
         {
             if (string.IsNullOrWhiteSpace(input))
                 return false;
-            return input.Length == 12 && phoneRegex.IsMatch(input);
+            return input.Length == 12 && _phoneRegex.IsMatch(input);
         }
     }
 }

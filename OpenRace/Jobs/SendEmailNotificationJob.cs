@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using MoreLinq;
 using NodaTime;
 using OpenRace.Data.Ef;
+using OpenRace.Extensions;
 using OpenRace.Features.Communication;
 
 namespace OpenRace.Jobs
@@ -37,12 +38,12 @@ namespace OpenRace.Jobs
         public async Task Invoke()
         {
             var sendEmailsAt = _appConfig.NotifyMemberAt;
-            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartTime.Zone);
-            if (now.Date != sendEmailsAt.Date || now.Hour != sendEmailsAt.Hour || now.Minute != sendEmailsAt.Minute)
+            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartTime.Zone).LocalDateTime;
+            if (!now.IsEqualAccurateToMinute(sendEmailsAt))
             {
                 return;
             }
-            var members = await _repo.AllAsync().ToListAsync();
+            var members = await _repo.GetSubscribedMembers().ToListAsync();
             foreach(var member in members.Where(it => it.Email != null && EmailValidator.Validate(it.Email)).Shuffle())
             {
                 try

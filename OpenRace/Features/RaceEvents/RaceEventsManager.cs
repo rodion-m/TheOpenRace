@@ -11,13 +11,13 @@ namespace OpenRace.Features.RaceEvents
 {
     public class RaceEventsManager
     {
-        private readonly RaceEventsDbRepository _repo;
+        private readonly RaceEventsRepository _repo;
         private readonly RaceEventsCache _eventsCache;
         private readonly IQueue _queue;
         private readonly RaceEventsSubscriptionManager _subscriptionManager;
 
         public RaceEventsManager(
-            RaceEventsDbRepository repo, 
+            RaceEventsRepository repo, 
             RaceEventsCache eventsCache, 
             IQueue queue, 
             RaceEventsSubscriptionManager subscriptionManager)

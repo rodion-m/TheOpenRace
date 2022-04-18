@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using NodaTime;
 using OpenRace.Exceptions;
+using OpenRace.Extensions;
 
 namespace OpenRace
 {
@@ -35,7 +36,7 @@ namespace OpenRace
                 raceStartTime.Date.At(new LocalTime(9, 0)),
                 "Храм св. Владимира",
                 "info@svzabeg.ru",
-                new Guid("2a61b11d-e3ce-483b-9b8e-21387cb5c16d"),
+                new Guid("3a61b11d-e3ce-483b-9b8e-21387cb5c16d"),
                 DefaultCultureInfo: new CultureInfo("ru"),
                 AvailableDistances: new DistanceInfo[]
                 {

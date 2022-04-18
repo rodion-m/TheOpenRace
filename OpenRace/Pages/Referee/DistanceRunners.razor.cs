@@ -157,7 +157,7 @@ namespace OpenRace.Pages.Referee
         private MemberLap CreateMemberLap(IEnumerable<RaceEvent> memberEvents)
         {
             var events = memberEvents as RaceEvent[] ?? memberEvents.ToArray();
-            var lapCount = events.Count(it => it.EventType == EventType.LapComplete);
+            var lapCount = events.Count(it => it.EventType == EventType.LapCompleted);
             return new MemberLap(events[0].MemberNumber, lapCount + 1, events[^1].TimeStamp);
         }
 
@@ -216,7 +216,7 @@ namespace OpenRace.Pages.Referee
                     Guid.NewGuid(),
                     AppConfig.RaceId,
                     lapEvent.MemberNumber,
-                    EventType.LapComplete,
+                    EventType.LapCompleted,
                     timeStamp.Value,
                     Session.UserName,
                     Distance

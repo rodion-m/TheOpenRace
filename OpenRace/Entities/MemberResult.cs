@@ -18,7 +18,7 @@ namespace OpenRace.Entities
             this.Distance = Distance;
         }
 
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
         public Guid RaceId { get; set; }
         public Guid MemberId { get; set; }
         public Instant Result { get; set; }

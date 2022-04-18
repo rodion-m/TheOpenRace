@@ -18,7 +18,7 @@ namespace OpenRace.Entities
             Distance = distance;
         }
 
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
         public Guid RaceId { get; set; }
         public int MemberNumber { get; set; }
         public EventType EventType { get; set; }
@@ -31,7 +31,7 @@ namespace OpenRace.Entities
     {
         CameToTheRace,
         RaceStarted,
-        LapComplete,
+        LapCompleted,
         RaceFinished
     }
 }

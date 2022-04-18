@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using OpenRace.Entities;
 
 namespace OpenRace.Data.Ef
 {
-    public class RaceEventsDbRepository : EfRepository<RaceEvent>
+    public class RaceEventsRepository : EfRepository<RaceEvent>
     {
-        public RaceEventsDbRepository(AppDbContext dbContext) : base(dbContext)
+        public RaceEventsRepository(AppDbContext dbContext) : base(dbContext)
         {
         }
 
@@ -84,7 +83,8 @@ namespace OpenRace.Data.Ef
             if (children == false) q = q.Where(it => it.Age >= Member.AdultsAge);
             else if (children == true) q = q.Where(it => it.Age < Member.AdultsAge);
             var members = await q.ToListAsync();
-            var events = await GetRaceEvents(raceId, distance).ToLookupAsync(it => it.MemberNumber);
+            var events = await GetRaceEvents(raceId, distance)
+                                                    .ToLookupAsync(it => it.MemberNumber);
             members.RemoveAll(it => !events.Contains(it.Number.GetValueOrDefault()));
             var dict = members.ToDictionary(member => member, member => events[member.Number!.Value].ToArray());
             return dict;

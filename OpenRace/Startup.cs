@@ -75,6 +75,7 @@ namespace OpenRace
             
             services.AddScheduler();
             services.AddTransient<SendEmailNotificationJob>();
+            services.AddTransient<SendResultsToEmailJob>();
             
             services.AddSingleton<IClock>(SystemClock.Instance);
             services.AddSingleton(AppConfig.Current);
@@ -84,9 +85,10 @@ namespace OpenRace
             services.AddSingleton<RaceEventsSubscriptionManager>();
             services.AddSingleton<RaceEventsCache>();
             services.AddSingleton<EmailTemplates>();
-            services.AddSingleton<IEmailService, AmazonSESEmailService>();
+            services.AddSingleton<IEmailSender, AmazonSESEmailSender>();
+            services.AddSingleton<IEmailService, EmailService>();
             services.AddScoped<MembersRepository>();
-            services.AddScoped<RaceEventsDbRepository>();
+            services.AddScoped<RaceEventsRepository>();
             services.AddScoped<RaceEventsManager>();
             services.AddScoped<RaceEventsFixer>();
             services.AddScoped(typeof(EfRepository<>));
@@ -97,7 +99,6 @@ namespace OpenRace
             //TODO добавить сюда запуск HostedService, который будет кешировать события для текущего raceId
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -141,9 +142,8 @@ namespace OpenRace
             provider.UseScheduler(scheduler =>
             {
                 
-                scheduler.Schedule<SendEmailNotificationJob>()
-                    //.DailyAt(9, 0);
-                    .EveryMinute();
+                //scheduler.Schedule<SendEmailNotificationJob>().EveryMinute();
+                scheduler.Schedule<SendResultsToEmailJob>().EveryMinute();
             });
         }
     }

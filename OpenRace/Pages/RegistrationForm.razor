@@ -52,14 +52,14 @@
 					</InputSelect>
 				</td>
 			</tr>
-			@* <tr> *@
-			@* 	<td>Email:</td> *@
-			@* 	<td> *@
-			@* 		<InputText class="form-control" @bind-Value="model.Email"></InputText> *@
-			@* 	</td> *@
-			@* </tr> *@
 			<tr>
-				<td>Phone:</td>
+				<td>Email:</td>
+				<td>
+					<InputText class="form-control" @bind-Value="model.Email"></InputText>
+				</td>
+			</tr>
+			<tr>
+				<td>Телефон:</td>
 				<td>
 					<InputText class="form-control" @bind-Value="model.Phone"></InputText>
 				</td>
@@ -77,7 +77,7 @@
 				</td>
 			</tr>
 			<tr>
-				<ValidationSummary/>
+				<td colspan="2"><ValidationSummary/></td>
 			</tr>
 			<tr>
 				<input class="btn btn-outline-primary" type="submit" value="Зарегистрироваться">
@@ -106,7 +106,6 @@ else
 			{
 				model.RegisteredBy = Session.UserName;
 			}
-			model.Email = " "; //TODO
 			var redirectUri = await RegistrationService.RegisterMemberWithoutPayment(
 				model, NavigationManager.BaseUri, CultureInfo.CurrentCulture);
 			NavigationManager.NavigateTo(redirectUri);
@@ -116,5 +115,4 @@ else
 			_busy = false;
 		}
 	}
-
 }

@@ -11,6 +11,7 @@ using OpenRace.Data.Specifications;
 using OpenRace.Entities;
 using OpenRace.Features.Payment;
 using OpenRace.Data;
+using OpenRace.Extensions;
 using OpenRace.Features.Communication;
 
 namespace OpenRace.Features.Registration
@@ -24,8 +25,13 @@ namespace OpenRace.Features.Registration
         private readonly IEmailService _emailService;
         private readonly IQueue _queue;
 
-        public RegistrationService(MembersRepository members, PaymentService paymentService, IClock clock,
-            AppConfig appConfig, IEmailService emailService, IQueue queue)
+        public RegistrationService(
+            MembersRepository members,
+            PaymentService paymentService, 
+            IClock clock,
+            AppConfig appConfig, 
+            IEmailService emailService, 
+            IQueue queue)
         {
             _members = members;
             _paymentService = paymentService;
@@ -74,7 +80,8 @@ namespace OpenRace.Features.Registration
             return redirectUri;
         }
 
-        public async Task<string> RegisterMemberWithoutPayment(RegistrationModel model, string hostUrl, CultureInfo cultureInfo)
+        public async Task<string> RegisterMemberWithoutPayment(
+            RegistrationModel model, string hostUrl, CultureInfo cultureInfo)
         {
             var (_, member) = await RegisterMember(model, null);
             if (member.Email != null && EmailValidation.EmailValidator.Validate(member.Email))

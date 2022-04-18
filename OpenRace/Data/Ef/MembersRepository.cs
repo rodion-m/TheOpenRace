@@ -56,5 +56,10 @@ namespace OpenRace.Data.Ef
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync(it => it.Id == id, cancellationToken);
         }
+
+        public IAsyncEnumerable<Member> GetSubscribedMembers()
+        {
+            return Queryable.Where(_dbContext.Members, it => it.Subscribed).ToAsyncEnumerable();
+        }
     }
 }

@@ -2,6 +2,7 @@
 @using OpenRace.Data.Ef
 @using System.Drawing
 @using System.Globalization
+@using System.Text
 @using BlazorDownloadFile
 @using NodaTime
 @using OpenRace.Entities
@@ -14,7 +15,7 @@
 @inject NavigationManager NavigationManager
 @inject AppConfig AppConfig
 @inject MembersRepository MembersRepo
-@inject RaceEventsDbRepository EventsRepo
+@inject RaceEventsRepository EventsRepo
 @inject IToastService ToastService
 @inject IClock Clock
 @inject RaceEventsFixer RaceEventsFixer
@@ -226,7 +227,7 @@ else
 			member,
 			_filter.Distance!.Value,
 			raceFinished?.TimeStamp - raceStarted.TimeStamp,
-			events.Count(it => it.EventType == EventType.LapComplete),
+			events.Count(it => it.EventType == EventType.LapCompleted),
 			AppConfig.GetDistanceInfo(raceStarted.Distance).LapsCount,
 			bestLap,
 			worstLap,
@@ -263,7 +264,7 @@ else
 		var csv = new[] {headers}.Concat(values)
 			.Select(it => string.Join(',', it))
 			.ToDelimitedString("\r\n");
-		await BlazorDownloadFileService.DownloadFileFromText(fileName, csv, "text/plain");
+		await BlazorDownloadFileService.DownloadFileFromText(fileName, csv, Encoding.UTF8, "text/plain");
 	}
 
 }
