@@ -26,6 +26,9 @@ namespace OpenRace.Features.Payment
         public Yandex.Checkout.V3.Payment DecodeWebhookRequest(
             string requestMethod, string requestContentType, Stream requestBody)
         {
+            if (requestMethod == null) throw new ArgumentNullException(nameof(requestMethod));
+            if (requestContentType == null) throw new ArgumentNullException(nameof(requestContentType));
+            if (requestBody == null) throw new ArgumentNullException(nameof(requestBody));
             var message = Client.ParseMessage(requestMethod, requestContentType, requestBody);
             if (message == null)
             {

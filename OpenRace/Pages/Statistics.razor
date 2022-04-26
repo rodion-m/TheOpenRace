@@ -62,14 +62,14 @@
 		<hr/>
 		<h2>Список участников</h2>
 		<Table TableItem="Member" Items="_statisticsData.AllMembers" PageSize="15" ColumnReorder="true">
-			<Column TableItem="Member" Title="№" Field="@(x => x.Number)" Sortable="true" Filterable="true" Width="5%"/>
+			<Column TableItem="Member" Title="№" Field="@(x => x.Number!)" Sortable="true" Filterable="true" Width="5%"/>
 			<Column TableItem="Member" Title="Имя" Field="@(x => x.FullName)" Sortable="true" Filterable="true" Width="30%"/>
-			<Column TableItem="Member" Title="Email" Field="@(x => x.Email)" Sortable="true" Filterable="true" Width="20%">
+			<Column TableItem="Member" Title="Email" Field="@(x => x.Email!)" Sortable="true" Filterable="true" Width="20%">
 				<Template>
 					<a href="mailto:@context.Email">@context.Email</a>
 				</Template>
 			</Column>
-			<Column TableItem="Member" Title="Телефон" Field="@(x => x.Phone)" Sortable="true" Filterable="true" Width="20%">
+			<Column TableItem="Member" Title="Телефон" Field="@(x => x.Phone!)" Sortable="true" Filterable="true" Width="20%">
 				<Template>
 					<a href="tel:@context.Phone">@context.Phone</a>
 				</Template>

@@ -54,7 +54,8 @@ namespace OpenRace.Entities
         public bool Subscribed { get; set; } = true;
         
         public string? RegisteredBy { get; set; }
-        
+        public Guid? ParentId { get; set; }
+
         //https://entityframeworkcore.com/knowledge-base/53063181/ef-core-database-specific-columns-to-nested-object
         [MetaEntityAttr(Enabled = false)]
         public Payment? Payment { get; set; }

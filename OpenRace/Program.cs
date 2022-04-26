@@ -55,6 +55,7 @@ namespace OpenRace
                 );
 
             if (!IsDebug)
+#pragma warning disable CS0162
             {
                 // ReSharper disable once HeapView.ClosureAllocation
                 var secrets = AppSecrets.GetInstance();
@@ -68,6 +69,7 @@ namespace OpenRace
                     }
                 );
             }
+#pragma warning restore CS0162
 
             Log.Logger = conf.CreateLogger();
         }

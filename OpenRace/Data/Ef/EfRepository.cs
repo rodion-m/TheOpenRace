@@ -21,10 +21,9 @@ namespace OpenRace.Data.Ef
             _dbContext = dbContext;
         }
 
-        public virtual async Task<TEntity> GetById(Guid id, CancellationToken cancellationToken = default)
+        public virtual Task<TEntity> GetById(Guid id, CancellationToken cancellationToken = default)
         {
-            var keyValues = new object[] { id };
-            return await _dbContext.Set<TEntity>().FindAsync(keyValues, cancellationToken);
+            return _dbContext.Set<TEntity>().FirstAsync(it => it.Id == id, cancellationToken);
         }
 
         public virtual IAsyncEnumerable<TEntity> AllAsync()
@@ -81,7 +80,7 @@ namespace OpenRace.Data.Ef
             ISpecification<TEntity> spec, CancellationToken cancellationToken = default)
         {
             var specificationResult = ApplySpecification(spec);
-            return specificationResult.FirstOrDefaultAsync(cancellationToken)!;
+            return specificationResult.FirstOrDefaultAsync(cancellationToken);
         }
 
         protected virtual IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> specification, bool evaluateCriteriaOnly = false)

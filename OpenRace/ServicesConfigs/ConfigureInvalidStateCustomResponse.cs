@@ -25,7 +25,7 @@ namespace OpenRace.ServicesConfigs
             context.HttpContext.Request.Body.CopyTo(ms);
             var requestString = Encoding.UTF8.GetString(ms.ToArray());
             var loggerFactory = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>();
-            var errors = context.ModelState.Where(it => it.Value.Errors.Any()).ToArray();
+            var errors = context.ModelState.Where(it => it.Value!.Errors.Any()).ToArray();
             
             var logger = loggerFactory.CreateLogger("Invalid Model");
             logger.LogWarning("Model state errors: {@Errors}. Request: {Request}", 

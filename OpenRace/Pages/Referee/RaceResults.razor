@@ -194,7 +194,8 @@ else
 			.OrderByDescending(it => Math.Min(it.FinishedLaps, it.TotalLaps)) //TODO fix
 			.ThenBy(it => it.RaceTime)
 			.ToList();
-		for (var i = 0; i < results.Count; i++) results[i].Position = i + 1;
+		for (var i = 0; i < results.Count; i++) 
+			results[i].Position = i + 1;
 
 		// await RaceEventsFixer.RemoveBadLaps(AppConfig.RaceId, distance.Value, AppConfig.MinLapDuration);
 		// await RaceEventsFixer.AddExtraAverageLaps(AppConfig.RaceId, results);

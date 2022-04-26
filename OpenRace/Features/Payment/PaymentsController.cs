@@ -39,9 +39,9 @@ namespace OpenRace.Features.Payment
                 return Forbid();
             }
             var body = new byte[Request.ContentLength ?? 0];
-            await Request.Body.ReadAsync(body);
+            _ = await Request.Body.ReadAsync(body);
             var payment = _paymentService.DecodeWebhookRequest(
-                Request.Method, Request.ContentType, new MemoryStream(body));
+                Request.Method, Request.ContentType!, new MemoryStream(body));
             if (payment.Paid)
             {
                 var member = await _registrationService.SetMembershipPaid(payment.Id);

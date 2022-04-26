@@ -33,12 +33,12 @@ namespace OpenRace.Features.Registration
         public async Task<IActionResult> Register([FromForm] RegistrationModel model)
         {
             var distance = int.Parse(model.DistanceKm!) * 1000;
-            if (!_appConfig.AvailableDistances.Any(it => it.DistanceMt == distance))
+            if (_appConfig.AvailableDistances.All(it => it.DistanceMt != distance))
             {
                 return BadRequest($"Неизвестная дистанция: {model.DistanceKm}");
             }
 
-            var rqf = Request.HttpContext.Features.Get<IRequestCultureFeature>();
+            var rqf = Request.HttpContext.Features.Get<IRequestCultureFeature>()!;
             var culture = rqf.RequestCulture.Culture;
             var redirectUri = await _registrationService.RegisterMemberWithoutPayment(
                 model, $"{Request.Scheme}://{Request.Host}/", culture);
