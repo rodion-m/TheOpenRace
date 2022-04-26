@@ -29,6 +29,7 @@ namespace OpenRace.Features.Payment
             if (requestMethod == null) throw new ArgumentNullException(nameof(requestMethod));
             if (requestContentType == null) throw new ArgumentNullException(nameof(requestContentType));
             if (requestBody == null) throw new ArgumentNullException(nameof(requestBody));
+            
             var message = Client.ParseMessage(requestMethod, requestContentType, requestBody);
             if (message == null)
             {
@@ -48,7 +49,7 @@ namespace OpenRace.Features.Payment
 
 
 
-        public async Task<(Entities.Payment payment, string redirectUri)> CreatePayment(
+        public async Task<(Entities.Payment payment, Uri redirectUri)> CreatePayment(
             decimal amount, string hash, string hostUrl)
         {
             var newPayment = new NewPayment
@@ -64,20 +65,18 @@ namespace OpenRace.Features.Payment
             var payment = await _asyncClient.CreatePaymentAsync(newPayment);
 
             var racePayment = new Entities.Payment(payment.Id, payment.Amount.Value, hash);
-            return (racePayment, payment.Confirmation.ConfirmationUrl);
+            return (racePayment, new Uri(payment.Confirmation.ConfirmationUrl));
         }
 
-        public string CreateReturnPageUri(string hash, string hostUrl)
-        {
-            return $"{hostUrl}purchase/{hash}";
-        }
+        public string CreateReturnPageUri(string hash, string hostUrl) 
+            => $"{hostUrl}purchase/{hash}";
 
-        public async Task<string> ReCreatePayment(Member member, string hostUrl)
+        public async Task<Uri> ReCreatePayment(Member member, string hostUrl)
         {
             if (member == null) throw new ArgumentNullException(nameof(member));
             var hash = Guid.NewGuid().ToString();
             var (payment, redirectUri) = await CreatePayment(
-                500, //model.Donation
+                500, //model.Donation //TODO
                 hash,
                 hostUrl
             );

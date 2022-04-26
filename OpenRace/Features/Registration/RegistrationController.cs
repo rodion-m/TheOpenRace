@@ -40,10 +40,11 @@ namespace OpenRace.Features.Registration
 
             var rqf = Request.HttpContext.Features.Get<IRequestCultureFeature>()!;
             var culture = rqf.RequestCulture.Culture;
-            var redirectUri = await _registrationService.RegisterMemberWithoutPayment(
-                model, $"{Request.Scheme}://{Request.Host}/", culture);
+            var hostUrl = $"{Request.Scheme}://{Request.Host}/";
+            var redirectUri = await _registrationService.Register(
+                model, hostUrl, culture, true);
 
-            return Redirect(redirectUri);
+            return Redirect(redirectUri.ToString());
         }
     }
 }

@@ -108,5 +108,10 @@ namespace OpenRace
         }
 
         public DistanceInfo GetDistanceInfo(int distance) => AvailableDistances.First(it => it.DistanceMt == distance);
+
+        public Uri GetConfirmedPageUri(string hostUrl, Guid memberId)
+        {
+            return new Uri($"{hostUrl}confirmed/{memberId}");
+        }
     }
 }

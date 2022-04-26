@@ -69,5 +69,6 @@ namespace OpenRace.Features.Registration
         [FromForm(Name = "registeredBy")]
         [MaxLength(200)]
         public string? RegisteredBy { get; set; }
+        
     }
 }

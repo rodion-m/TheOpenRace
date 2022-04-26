@@ -106,9 +106,9 @@ else
 			{
 				model.RegisteredBy = Session.UserName;
 			}
-			var redirectUri = await RegistrationService.RegisterMemberWithoutPayment(
-				model, NavigationManager.BaseUri, CultureInfo.CurrentCulture);
-			NavigationManager.NavigateTo(redirectUri);
+			var redirectUri = await RegistrationService.Register(
+				model, NavigationManager.BaseUri, CultureInfo.CurrentCulture, true);
+			NavigationManager.NavigateTo(redirectUri.ToString());
 		}
 		finally
 		{

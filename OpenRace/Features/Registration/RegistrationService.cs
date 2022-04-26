@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Queuing.Interfaces;
+using EmailValidation;
 using Nito.AsyncEx;
 using NodaTime;
 using OpenRace.Data.Ef;
@@ -67,32 +68,38 @@ namespace OpenRace.Features.Registration
             return (existedMember != null ? RegistrationResult.Registered : RegistrationResult.Updated, member);
         }
 
-        public async Task<string> RegisterAndCreatePayment(RegistrationModel model, string hostUrl)
+        public async Task<Uri> Register(
+            RegistrationModel model, string hostUrl, CultureInfo cultureInfo, bool payNow)
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
-            var hash = Guid.NewGuid().ToString();
-            var (payment, redirectUri) = await _paymentService.CreatePayment(
-                500, //model.Donation
-                hash,
-                hostUrl
-            );
-            await RegisterMember(model, payment);
-            return redirectUri;
-        }
+            if (hostUrl == null) throw new ArgumentNullException(nameof(hostUrl));
+            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
+            
+            if (model == null) throw new ArgumentNullException(nameof(model));
+            var paymentHash = Guid.NewGuid().ToString();
+            Entities.Payment? payment = null;
+            Uri? redirectUri = null;
+            if (payNow)
+            {
+                (payment, redirectUri) = await _paymentService.CreatePayment(
+                    500, //model.Donation //TODO
+                    paymentHash,
+                    hostUrl
+                );
+            }
 
-        public async Task<string> RegisterMemberWithoutPayment(
-            RegistrationModel model, string hostUrl, CultureInfo cultureInfo)
-        {
-            var (_, member) = await RegisterMember(model, null);
-            if (member.Email != null && EmailValidation.EmailValidator.Validate(member.Email))
+            var (_, member) = await RegisterMember(model, payment);
+            if (member.Email != null && EmailValidator.Validate(member.Email))
             {
                 _queue.QueueAsyncTask(() => _emailService.SendMembershipConfirmedMessage(member, cultureInfo));
             }
 
-            var redirectUri =$"{hostUrl}confirmed/{member.Id}";
+            redirectUri ??= _appConfig.GetConfirmedPageUri(hostUrl, member.Id);
             return redirectUri;
         }
-        public async Task<(RegistrationResult, Member)> RegisterMember(RegistrationModel model,
+
+        private async Task<(RegistrationResult, Member)> RegisterMember(
+            RegistrationModel model,
             Entities.Payment? payment)
         {
             var member = CreateMemberFromRegistrationModel(model, payment);
