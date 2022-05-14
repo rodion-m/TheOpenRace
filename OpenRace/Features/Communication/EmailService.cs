@@ -39,7 +39,8 @@ namespace OpenRace.Features.Communication
                 throw new ArgumentException($"Некорректный email: {member.Email}");
             }
             var html = _templates.GetTemplate1Html(
-                "Участие в забеге подтверждено!", 
+                "Поздравляем!" +
+                "<br/>Участие в забеге подтверждено!", 
                 $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
                 $"Имя участника: {member.FullName}<br/>Вы бежите под номером: {member.Number}",
                 "Ждем вас!",

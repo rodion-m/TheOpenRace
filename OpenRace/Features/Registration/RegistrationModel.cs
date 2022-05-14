@@ -8,10 +8,11 @@ namespace OpenRace.Features.Registration
     // https://docs.google.com/forms/d/e/1FAIpQLSfr7m732GHkF9UWSQFjP72lqY80iGtmza_dHJs57K4swGF-uA/formResponse
     public record RegistrationModel
     {
-        // [Required]
-        // [Display(Name = "Сумма пожертвования")]
-        // [FromForm(Name = "donation")]
-        // public decimal Donation { get; set; }
+        [Required]
+        [Display(Name = "Сумма пожертвования")]
+        [FromForm(Name = "donation")]
+        [Range(10, 100_000)]
+        public string Donation { get; set; } = null!;
         
         [Required]
         [Display(Name = "Имя")]
@@ -30,9 +31,8 @@ namespace OpenRace.Features.Registration
         [MaxLength(50)]
         public string? PatronymicName { get; set; }
 
-        [Required]
+        [Required, Range(1, 120)]
         [Display(Name = "Возраст")]
-        [Range(1, 120)]
         [FromForm(Name = "age")] 
         public int Age { get; set; }
         
@@ -49,15 +49,13 @@ namespace OpenRace.Features.Registration
         public string? Email { get; set; }
         
         [Display(Name = "Телефон")]
-        //[Phone]
         [FromForm(Name = "phone")]
         [MaxLength(50)]
         public string? Phone { get; set; }
         
-        [Required]
+        [Required, Range(0, int.MaxValue)]
         [Display(Name = "Дистанция")]
         [FromForm(Name = "distance")]
-        [Range(0, int.MaxValue)]
         public string? DistanceKm { get; set; }
 
         [Display(Name = "Как узнали о забеге")]
@@ -69,6 +67,5 @@ namespace OpenRace.Features.Registration
         [FromForm(Name = "registeredBy")]
         [MaxLength(200)]
         public string? RegisteredBy { get; set; }
-        
     }
 }

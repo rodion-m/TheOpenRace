@@ -69,13 +69,19 @@
 				<td>
 					<InputSelect class="form-control" @bind-Value="model.DistanceKm">
 						<option value="">Выбор</option>
-					@foreach (var distanceInfo in AppConfig.AvailableDistances)
-					{
-						<option value="@(distanceInfo.DistanceKm)" class="form-control">@(distanceInfo.Name)</option>
-					}
+						@foreach (var distanceInfo in AppConfig.AvailableDistances)
+						{
+							<option value="@(distanceInfo.DistanceKm)" class="form-control">@(distanceInfo.Name)</option>
+						}
 					</InputSelect>
 				</td>
 			</tr>
+			<tr>
+            	<td>Сумма пожертвования:</td>
+            	<td>
+            		<InputText class="form-control" @bind-Value="model.Donation"></InputText>
+            	</td>
+            </tr>
 			<tr>
 				<td colspan="2"><ValidationSummary/></td>
 			</tr>

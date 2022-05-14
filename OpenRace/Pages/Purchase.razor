@@ -65,7 +65,8 @@ else
 	
 	private async Task NavigateToPay()
 	{
-		var redirectUri = await PaymentService.ReCreatePayment(_member!, NavigationManager.BaseUri);
+		var redirectUri = await PaymentService.ReCreatePayment(
+			_member!, NavigationManager.BaseUri, _member!.Payment!.Amount);
 		NavigationManager.NavigateTo(redirectUri.ToString());
 	}
 

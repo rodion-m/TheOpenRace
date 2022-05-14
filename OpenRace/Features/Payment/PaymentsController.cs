@@ -44,11 +44,7 @@ namespace OpenRace.Features.Payment
                 Request.Method, Request.ContentType!, new MemoryStream(body));
             if (payment.Paid)
             {
-                var member = await _registrationService.SetMembershipPaid(payment.Id);
-                if (member.Email != null && EmailValidation.EmailValidator.Validate(member.Email))
-                {
-                    await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
-                }
+                await _registrationService.SetMembershipPaid(payment.Id);
             }
             else
             {

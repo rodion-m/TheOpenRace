@@ -29,15 +29,31 @@ namespace OpenRace.Data.Ef
 
         public Task<Member?> GetLastPaidMemberOrNull()
         {
-            return Queryable.Where(_dbContext.Members, it => it.Number != null)
+            return _dbContext.Members.Where(it => it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync();
         }
         
-        public Task<Member?> GetLastMemberNumber(int distance)
+        public async Task<IReadOnlyList<Member>> GetUnpaidMembers()
         {
-            return Queryable.Where(_dbContext.Members, it => it.Distance == distance && it.Number != null)
+            return await _dbContext.Members.Where(it => it.Payment!.PaidAt == null)
+                .OrderByDescending(it => it.CreatedAt)
+                .Include(it => it.Payment)
+                .ToListAsync();
+        }
+        
+        public Task<Member?> GetLastMemberNumberByDistance(int distance)
+        {
+            return _dbContext.Members.Where(it => it.Distance == distance && it.Number != null)
+                .OrderByDescending(it => it.Number)
+                .Include(it => it.Payment)
+                .FirstOrDefaultAsync();
+        }
+        
+        public Task<Member?> GetLastMemberNumber()
+        {
+            return _dbContext.Members.Where(it => it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync();
@@ -59,7 +75,7 @@ namespace OpenRace.Data.Ef
 
         public IAsyncEnumerable<Member> GetSubscribedMembers()
         {
-            return Queryable.Where(_dbContext.Members, it => it.Subscribed).ToAsyncEnumerable();
+            return _dbContext.Members.Where(it => it.Subscribed).ToAsyncEnumerable();
         }
     }
 }

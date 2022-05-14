@@ -25,18 +25,19 @@ namespace OpenRace
         static AppConfig()
         {
             var raceStartTime = new ZonedDateTime(
-                new LocalDate(2021, 10, 16).At(new LocalTime(14, 00, 00)),
+                new LocalDate(2022, 5, 28)
+                    .At(new LocalTime(14, 00, 00)),
                 DateTimeZoneProviders.Tzdb["Europe/Moscow"],
                 Offset.FromHours(3)
             );
             Current = new AppConfig(
-                "https://svzabeg.ru/",
-                "https://panel.svzabeg.ru/",
+                    "https://svzabeg.ru/", 
+                "https://perovo-zabeg.azurewebsites.net/", //"https://panel.svzabeg.ru/",
                 raceStartTime,
                 raceStartTime.Date.At(new LocalTime(9, 0)),
                 "Храм св. Владимира",
                 "info@svzabeg.ru",
-                new Guid("3a61b11d-e3ce-483b-9b8e-21387cb5c16d"),
+                new Guid("82ECE55A-EC6E-46AA-99B6-C8ED3B34D835"),
                 DefaultCultureInfo: new CultureInfo("ru"),
                 AvailableDistances: new DistanceInfo[]
                 {
@@ -100,7 +101,11 @@ namespace OpenRace
 
         public string GetLink(string location) => $"{Hostname}{location}";
 
-        public record DistanceInfo(int DistanceMt, Range[] Numbers, Color Color, string? Name,
+        public record DistanceInfo(
+            int DistanceMt, 
+            Range[] Numbers, 
+            Color Color, 
+            string? Name,
             int OneLapDistance = 1000)
         {
             public int LapsCount => DistanceMt / OneLapDistance;

@@ -56,6 +56,7 @@ namespace OpenRace
 
             if (!IsDebug)
 #pragma warning disable CS0162
+                // ReSharper disable once HeuristicUnreachableCode
             {
                 // ReSharper disable once HeapView.ClosureAllocation
                 var secrets = AppSecrets.GetInstance();

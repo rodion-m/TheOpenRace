@@ -12,12 +12,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using NodaTime;
+using OpenRace.BackgroundServices;
 using OpenRace.Data.Ef;
 using OpenRace.Features.Auth;
 using OpenRace.Features.Communication;
 using OpenRace.Features.Payment;
 using OpenRace.Features.Registration;
 using OpenRace.Data;
+using OpenRace.Data.GSL;
 using OpenRace.Features.RaceEvents;
 using OpenRace.Jobs;
 using OpenRace.ServicesConfigs;
@@ -87,6 +89,7 @@ namespace OpenRace
             services.AddSingleton<EmailTemplates>();
             services.AddSingleton<IEmailSender, AmazonSESEmailSender>();
             services.AddSingleton<IEmailService, EmailService>();
+            services.AddSingleton(typeof(IGenericServiceProvider<,,>), typeof(GenericServiceProvider<,,>));
             services.AddScoped<MembersRepository>();
             services.AddScoped<RaceEventsRepository>();
             services.AddScoped<RaceEventsManager>();
@@ -95,7 +98,9 @@ namespace OpenRace
             services.AddScoped<RegistrationService>();
             services.AddScoped<PaymentService>();
             services.AddScoped<SessionService>();
-            services.AddHostedService<BackgroundCheckConnect>();
+            services.AddScoped<IMemberNumberGenerator, MemberNumberGenerator>();
+            services.AddHostedService<PaymentCheckingBackgroundService>();
+            services.AddHostedService<CheckConnectionBackgroundService>();
             //TODO добавить сюда запуск HostedService, который будет кешировать события для текущего raceId
         }
 

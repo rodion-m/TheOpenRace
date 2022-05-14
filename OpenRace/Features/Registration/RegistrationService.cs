@@ -25,6 +25,7 @@ namespace OpenRace.Features.Registration
         private readonly AppConfig _appConfig;
         private readonly IEmailService _emailService;
         private readonly IQueue _queue;
+        private readonly IMemberNumberGenerator _memberNumberGenerator;
 
         public RegistrationService(
             MembersRepository members,
@@ -32,7 +33,8 @@ namespace OpenRace.Features.Registration
             IClock clock,
             AppConfig appConfig, 
             IEmailService emailService, 
-            IQueue queue)
+            IQueue queue,
+            IMemberNumberGenerator memberNumberGenerator)
         {
             _members = members;
             _paymentService = paymentService;
@@ -40,6 +42,7 @@ namespace OpenRace.Features.Registration
             _appConfig = appConfig;
             _emailService = emailService;
             _queue = queue;
+            _memberNumberGenerator = memberNumberGenerator;
         }
 
         private static readonly AsyncLock _registrationMutex = new();
@@ -74,25 +77,29 @@ namespace OpenRace.Features.Registration
             if (model == null) throw new ArgumentNullException(nameof(model));
             if (hostUrl == null) throw new ArgumentNullException(nameof(hostUrl));
             if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
+
+            if (!decimal.TryParse(model.Donation, out var donation))
+            {
+                throw new InvalidOperationException($"{nameof(model.Donation)} is not decimal ({model.Donation})");
+            }
             
-            if (model == null) throw new ArgumentNullException(nameof(model));
             var paymentHash = Guid.NewGuid().ToString();
             Entities.Payment? payment = null;
             Uri? redirectUri = null;
             if (payNow)
             {
                 (payment, redirectUri) = await _paymentService.CreatePayment(
-                    500, //model.Donation //TODO
+                    donation,
                     paymentHash,
                     hostUrl
                 );
             }
 
             var (_, member) = await RegisterMember(model, payment);
-            if (member.Email != null && EmailValidator.Validate(member.Email))
-            {
-                _queue.QueueAsyncTask(() => _emailService.SendMembershipConfirmedMessage(member, cultureInfo));
-            }
+            // if (member.Email != null && EmailValidator.Validate(member.Email))
+            // {
+            //     _queue.QueueAsyncTask(() => _emailService.SendMembershipConfirmedMessage(member, cultureInfo));
+            // }
 
             redirectUri ??= _appConfig.GetConfirmedPageUri(hostUrl, member.Id);
             return redirectUri;
@@ -106,7 +113,7 @@ namespace OpenRace.Features.Registration
             using var locking = await _memberNumberMutex.LockAsync();
             if (payment == null)
             {
-                member.Number = await GetNewMemberNumber(member);
+                member.Number = await _memberNumberGenerator.GetNewMemberNumber(member);
             }
 
             return await RegisterOrUpdate(member);
@@ -137,6 +144,10 @@ namespace OpenRace.Features.Registration
         {
             var member = await _members.FirstAsync(new MemberByPaymentId(paymentId));
             await SetMembershipPaid(member);
+            if (member.Email != null && EmailValidator.Validate(member.Email))
+            {
+                await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
+            }
             return member;
         }
 
@@ -148,7 +159,7 @@ namespace OpenRace.Features.Registration
             member.Payment!.PaidAt = _clock.GetCurrentInstant();
             if (assignNumberIfItsNot && member.Number == null)
             {
-                member.Number = await GetNewMemberNumber(member);
+                member.Number = await _memberNumberGenerator.GetNewMemberNumber(member);
             }
 
             await _members.UpdateAsync(member);
@@ -157,15 +168,8 @@ namespace OpenRace.Features.Registration
 
         public async Task AssignNewMemberNumber(Member member)
         {
-            member.Number = await GetNewMemberNumber(member);
+            member.Number = await _memberNumberGenerator.GetNewMemberNumber(member);
             await _members.UpdateAsync(member);
-        }
-
-        [Pure]
-        private async Task<int> GetNewMemberNumber(Member member)
-        {
-            var lastMember = await _members.GetLastMemberNumber(member.Distance);
-            return _appConfig.GetNextMemberNumber(member.Distance, lastMember?.Number);
         }
     }
 

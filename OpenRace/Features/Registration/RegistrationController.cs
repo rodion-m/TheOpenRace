@@ -43,6 +43,11 @@ namespace OpenRace.Features.Registration
             var hostUrl = $"{Request.Scheme}://{Request.Host}/";
             var redirectUri = await _registrationService.Register(
                 model, hostUrl, culture, true);
+            
+            if (!decimal.TryParse(model.Donation, out _))
+            {
+                return BadRequest("Сумма пожертвования должна быть задана и иметь корректное значение");
+            }
 
             return Redirect(redirectUri.ToString());
         }

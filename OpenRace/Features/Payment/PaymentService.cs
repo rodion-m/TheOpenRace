@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using NodaTime;
 using OpenRace.Data.Ef;
 using OpenRace.Data.Specifications;
 using OpenRace.Entities;
-using OpenRace.Data;
 using Yandex.Checkout.V3;
 
 namespace OpenRace.Features.Payment
@@ -61,6 +59,7 @@ namespace OpenRace.Features.Payment
                     ReturnUrl = CreateReturnPageUri(hash, hostUrl)
                 },
                 Capture = true,
+                Description = "Взнос за участие в благоритворительном забеге"
             };
             var payment = await _asyncClient.CreatePaymentAsync(newPayment);
 
@@ -71,12 +70,12 @@ namespace OpenRace.Features.Payment
         public string CreateReturnPageUri(string hash, string hostUrl) 
             => $"{hostUrl}purchase/{hash}";
 
-        public async Task<Uri> ReCreatePayment(Member member, string hostUrl)
+        public async Task<Uri> ReCreatePayment(Member member, string hostUrl, decimal donation)
         {
             if (member == null) throw new ArgumentNullException(nameof(member));
             var hash = Guid.NewGuid().ToString();
             var (payment, redirectUri) = await CreatePayment(
-                500, //model.Donation //TODO
+                donation,
                 hash,
                 hostUrl
             );
@@ -90,6 +89,12 @@ namespace OpenRace.Features.Payment
             if (paymentHash == null) throw new ArgumentNullException(nameof(paymentHash));
             var member = await _members.FirstOrDefaultAsync(new MemberByPaymentHash(paymentHash));
             return member;
+        }
+        
+        public async Task<bool> IsPaymentPaid(string paymentId)
+        {
+            var payment = await _asyncClient.GetPaymentAsync(paymentId);
+            return payment.Paid;
         }
     }
 }
