@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using OpenRace.Data.Ef;
 using OpenRace.Data.Specifications;
@@ -91,9 +92,9 @@ namespace OpenRace.Features.Payment
             return member;
         }
         
-        public async Task<bool> IsPaymentPaid(string paymentId)
+        public async Task<bool> IsPaymentPaid(string paymentId, CancellationToken cancellationToken = default)
         {
-            var payment = await _asyncClient.GetPaymentAsync(paymentId);
+            var payment = await _asyncClient.GetPaymentAsync(paymentId, cancellationToken);
             return payment.Paid;
         }
     }

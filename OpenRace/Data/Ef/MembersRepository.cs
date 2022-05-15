@@ -35,12 +35,12 @@ namespace OpenRace.Data.Ef
                 .FirstOrDefaultAsync();
         }
         
-        public async Task<IReadOnlyList<Member>> GetUnpaidMembers()
+        public async Task<IReadOnlyList<Member>> GetUnpaidMembers(CancellationToken cancellationToken = default)
         {
             return await _dbContext.Members.Where(it => it.Payment!.PaidAt == null)
                 .OrderByDescending(it => it.CreatedAt)
                 .Include(it => it.Payment)
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
         }
         
         public Task<Member?> GetLastMemberNumberByDistance(int distance)

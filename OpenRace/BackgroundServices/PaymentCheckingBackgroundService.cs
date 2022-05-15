@@ -36,31 +36,33 @@ public class PaymentCheckingBackgroundService : BackgroundService
         {
             try
             {
-                await CheckPayments();
+                await CheckPayments(stoppingToken);
             }
-            catch (Exception e)
+            catch (Exception e) when (e is not OperationCanceledException)
             {
                 _logger.LogError(e, "Error while checking payments");
             }
         }
     }
 
-    private async Task CheckPayments()
+    private async Task CheckPayments(CancellationToken cancellationToken)
     {
         await using var scope = _services.CreateScope();
         var (membersRepository, paymentService, membersService) = scope;
-        var members = await membersRepository.GetUnpaidMembers();
+        var members = await membersRepository.GetUnpaidMembers(cancellationToken);
         foreach (var member in members)
         {
-            var paid = await IsPaymentPaidWithRetry(member, paymentService);
+            var paid = await IsPaymentPaidWithRetry(member, paymentService, cancellationToken);
             if (paid)
             {
                 await membersService.SetMembershipPaid(member);
             }
+            cancellationToken.ThrowIfCancellationRequested();
         }
     }
 
-    private async Task<bool> IsPaymentPaidWithRetry(Member member, PaymentService paymentService)
+    private async Task<bool> IsPaymentPaidWithRetry(
+        Member member, PaymentService paymentService, CancellationToken cancellationToken)
     {
         var paymentId = member.Payment!.Id;
         var policy = Policy
@@ -70,8 +72,9 @@ public class PaymentCheckingBackgroundService : BackgroundService
                 {
                     _logger.LogWarning(exception, "Error occured while checking payment {PaymentId}", paymentId);
                 });
-        var res = await policy.ExecuteAndCaptureAsync(() => paymentService.IsPaymentPaid(paymentId));
-        if (res.Outcome == OutcomeType.Failure)
+        var res = await policy.ExecuteAndCaptureAsync(
+            ct => paymentService.IsPaymentPaid(paymentId, ct), cancellationToken);
+        if (res.Outcome == OutcomeType.Failure && res.FinalException is not OperationCanceledException)
         {
             _logger.LogError(
                 res.FinalException,
