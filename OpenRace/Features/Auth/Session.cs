@@ -8,7 +8,7 @@ namespace OpenRace.Features.Auth
 
         public bool IsValid => !string.IsNullOrWhiteSpace(UserName) && !string.IsNullOrWhiteSpace(Password);
         
-        public bool IsAuthorized() => Password == "perovo2021";
+        public bool IsAuthorized() => Password == "perovo481523";
 
         public bool IsAdmin() => IsAuthorized() && UserName == "Rodion" || UserName == "DimaAdmin";
     }

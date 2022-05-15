@@ -7,11 +7,12 @@ namespace OpenRace.Entities
     [MetaEntity(DisplayName = "Участник", DisplayNamePlural = "Участники", Description = "Список участников")]
     public record Member : IEntity
     {
+        protected Member() {}
         public Member(
             Guid id, 
             Instant createdAt,
             string fullName,
-            string email,
+            string? email,
             string? phone, 
             int age, 
             Gender gender, 
@@ -36,7 +37,8 @@ namespace OpenRace.Entities
         public Guid Id { get; init; }
         [MetaEntityAttr(Enabled = false)]
         public Instant CreatedAt { get; set; }
-        public string FullName { get; set; }
+
+        public string FullName { get; set; } = "";
         public string? Email { get; set; }
         public string? Phone { get; set; }
         public int Age { get; set; }

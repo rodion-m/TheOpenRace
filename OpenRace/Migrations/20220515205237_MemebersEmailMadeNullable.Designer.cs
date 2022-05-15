@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NodaTime;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,10 @@ using OpenRace.Data.Ef;
 namespace OpenRace.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class MembersContextModelSnapshot : ModelSnapshot
+    [Migration("20220515205237_MemebersEmailMadeNullable")]
+    partial class MemebersEmailMadeNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -27,17 +27,22 @@ public class PaymentCheckingBackgroundService : BackgroundService
         var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
-            await using var scope = _services.CreateScope();
-            var (membersRepository, paymentService, membersService) = scope;
-            
-            var members = await membersRepository.GetUnpaidMembers();
-            foreach (var member in members)
+            await CheckPayments();
+        }
+    }
+
+    private async Task CheckPayments()
+    {
+        await using var scope = _services.CreateScope();
+        var (membersRepository, paymentService, membersService) = scope;
+
+        var members = await membersRepository.GetUnpaidMembers();
+        foreach (var member in members)
+        {
+            var paid = await paymentService.IsPaymentPaid(member.Payment!.Id);
+            if (paid)
             {
-                var paid = await paymentService.IsPaymentPaid(member.Payment!.Id);
-                if (paid)
-                {
-                    await membersService.SetMembershipPaid(member);
-                }
+                await membersService.SetMembershipPaid(member);
             }
         }
     }

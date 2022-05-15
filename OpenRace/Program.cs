@@ -38,13 +38,25 @@ namespace OpenRace
 
         private static void ConfigureSerilog()
         {
-#if DEBUG
-            const bool IsDebug = true;
-#else
-            const bool IsDebug = false;
-#endif
-            var conf = new LoggerConfiguration()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            var conf = ConfigureLogger(new LoggerConfiguration());
+            Log.Logger = conf.CreateLogger();
+        }
+
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            var secrets = AppSecrets.GetInstance();
+            return Host.CreateDefaultBuilder(args)
+                .UseSerilog(configureLogger: (_, conf) => ConfigureLogger(conf))
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseSentry(secrets.SentryDsn);
+                });
+        }
+
+        private static LoggerConfiguration ConfigureLogger(LoggerConfiguration conf)
+        {
+            conf.MinimumLevel.Override("Microsoft", LogEventLevel.Information)
                 .Enrich.FromLogContext()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
@@ -53,38 +65,21 @@ namespace OpenRace
                     rollingInterval: RollingInterval.Day,
                     restrictedToMinimumLevel: LogEventLevel.Debug
                 );
-
-            if (!IsDebug)
-#pragma warning disable CS0162
-                // ReSharper disable once HeuristicUnreachableCode
-            {
-                // ReSharper disable once HeapView.ClosureAllocation
-                var secrets = AppSecrets.GetInstance();
-                conf.WriteTo.Sentry(s =>
-                    {
-                        s.Dsn = secrets.SentryDsn;
-                        s.MinimumBreadcrumbLevel = LogEventLevel.Debug;
-                        s.MinimumEventLevel = LogEventLevel.Error;
-                        s.TracesSampleRate = 1.0;
-                        s.Debug = true;
-                    }
-                );
-            }
-#pragma warning restore CS0162
-
-            Log.Logger = conf.CreateLogger();
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args)
-        {
+            
+#if DEBUG
+            // ReSharper disable once HeapView.ClosureAllocation
             var secrets = AppSecrets.GetInstance();
-            return Host.CreateDefaultBuilder(args)
-                .UseSerilog()
-                .ConfigureWebHostDefaults(webBuilder =>
+            conf.WriteTo.Sentry(s =>
                 {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.UseSentry(secrets.SentryDsn);
-                });
+                    s.Dsn = secrets.SentryDsn;
+                    s.MinimumBreadcrumbLevel = LogEventLevel.Debug;
+                    s.MinimumEventLevel = LogEventLevel.Error;
+                    s.TracesSampleRate = 1.0;
+                    s.Debug = true;
+                }
+            );
+#endif
+            return conf;
         }
     }
 }

@@ -144,16 +144,13 @@ namespace OpenRace.Features.Registration
         {
             var member = await _members.FirstAsync(new MemberByPaymentId(paymentId));
             await SetMembershipPaid(member);
-            if (member.Email != null && EmailValidator.Validate(member.Email))
-            {
-                await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
-            }
             return member;
         }
 
         private static readonly AsyncLock _memberNumberMutex = new();
 
-        public async Task<Member> SetMembershipPaid(Member member, bool assignNumberIfItsNot = true)
+        public async Task<Member> SetMembershipPaid(
+            Member member, bool assignNumberIfItsNot = true, bool notifyByEmail = true)
         {
             using var locking = await _memberNumberMutex.LockAsync();
             member.Payment!.PaidAt = _clock.GetCurrentInstant();
@@ -163,6 +160,15 @@ namespace OpenRace.Features.Registration
             }
 
             await _members.UpdateAsync(member);
+
+            if (notifyByEmail)
+            {
+                if (member.Email != null && EmailValidator.Validate(member.Email))
+                {
+                    await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
+                }
+            }
+            
             return member;
         }
 

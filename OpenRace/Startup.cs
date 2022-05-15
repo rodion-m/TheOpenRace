@@ -41,6 +41,11 @@ namespace OpenRace
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<HostOptions>(opts =>
+            {
+                opts.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+            });
+
             var secrets = AppSecrets.GetInstance();
 
             // Blazor:
@@ -56,13 +61,13 @@ namespace OpenRace
 
             services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(
-                    secrets.ConnectionStrings.PostgreCredentials,
-                    o => o
-                        .UseNodaTime()
-                        .EnableRetryOnFailure()
-                )
-                .LogTo(Log.Debug)
-                .EnableSensitiveDataLogging()
+                        secrets.ConnectionStrings.PostgreCredentials,
+                        o => o
+                            .UseNodaTime()
+                            .EnableRetryOnFailure()
+                    )
+                    .LogTo(Log.Debug)
+                    .EnableSensitiveDataLogging()
             );
             services.AddDbContext<ConnectionContext>(options =>
                     options.UseNpgsql(
@@ -74,11 +79,11 @@ namespace OpenRace
             services.AddDatabaseDeveloperPageExceptionFilter();
             services.AddQueue();
             services.AddCache();
-            
+
             services.AddScheduler();
             services.AddTransient<SendEmailNotificationJob>();
             services.AddTransient<SendResultsToEmailJob>();
-            
+
             services.AddSingleton<IClock>(SystemClock.Instance);
             services.AddSingleton(AppConfig.Current);
             services.AddSingleton(secrets.YouKassaSecrets);
@@ -132,9 +137,7 @@ namespace OpenRace
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapEasyData(options => {
-                    options.UseDbContext<AppDbContext>();
-                });
+                endpoints.MapEasyData(options => { options.UseDbContext<AppDbContext>(); });
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
                 endpoints.MapControllers();
@@ -146,7 +149,6 @@ namespace OpenRace
             var provider = app.ApplicationServices;
             provider.UseScheduler(scheduler =>
             {
-                
                 //scheduler.Schedule<SendEmailNotificationJob>().EveryMinute();
                 scheduler.Schedule<SendResultsToEmailJob>().EveryMinute();
             });
