@@ -1,14 +1,9 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 namespace OpenRace
 {
@@ -46,7 +41,11 @@ namespace OpenRace
         {
             var secrets = AppSecrets.GetInstance();
             return Host.CreateDefaultBuilder(args)
-                .UseSerilog(configureLogger: (_, conf) => ConfigureLogger(conf))
+                .UseSerilog(configureLogger: (hostingContext, conf) =>
+                {
+                    ConfigureLogger(conf);
+                    conf.ReadFrom.Configuration(hostingContext.Configuration);
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
@@ -56,17 +55,16 @@ namespace OpenRace
 
         private static LoggerConfiguration ConfigureLogger(LoggerConfiguration conf)
         {
-            conf.MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            const string outputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}";
+            conf
                 .Enrich.FromLogContext()
-                .MinimumLevel.Debug()
-                .WriteTo.Console()
+                .WriteTo.Console(outputTemplate: outputTemplate)
                 .WriteTo.File(
-                    "logs/log_.txt",
-                    rollingInterval: RollingInterval.Day,
-                    restrictedToMinimumLevel: LogEventLevel.Debug
+                    outputTemplate: outputTemplate, //new CompactJsonFormatter(),
+                    path: "logs/log_.txt",
+                    rollingInterval: RollingInterval.Day
                 );
-            
-#if DEBUG
+#if !DEBUG
             // ReSharper disable once HeapView.ClosureAllocation
             var secrets = AppSecrets.GetInstance();
             conf.WriteTo.Sentry(s =>

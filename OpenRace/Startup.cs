@@ -60,15 +60,15 @@ namespace OpenRace
             services.ConfigureInvalidStateCustomResponse();
 
             services.AddDbContext<AppDbContext>(options =>
+            {
                 options.UseNpgsql(
                         secrets.ConnectionStrings.PostgreCredentials,
                         o => o
                             .UseNodaTime()
                             .EnableRetryOnFailure()
                     )
-                    .LogTo(Log.Debug)
-                    .EnableSensitiveDataLogging()
-            );
+                    .EnableSensitiveDataLogging();
+            });
             services.AddDbContext<ConnectionContext>(options =>
                     options.UseNpgsql(
                         secrets.ConnectionStrings.PostgreCredentials,
@@ -126,8 +126,8 @@ namespace OpenRace
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            app.UseRouting();
             app.UseSerilogRequestLogging();
+            app.UseRouting();
             app.UseSentryTracing();
             app.UseRequestLocalization("ru-RU");
 
