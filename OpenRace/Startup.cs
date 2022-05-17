@@ -20,6 +20,7 @@ using OpenRace.Features.Payment;
 using OpenRace.Features.Registration;
 using OpenRace.Data;
 using OpenRace.Data.GSL;
+using OpenRace.Data.GSL.Abstractions;
 using OpenRace.Features.RaceEvents;
 using OpenRace.Jobs;
 using OpenRace.ServicesConfigs;

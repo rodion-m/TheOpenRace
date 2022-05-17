@@ -11,7 +11,7 @@ namespace OpenRace.Features.Registration
         [Required]
         [Display(Name = "Сумма пожертвования")]
         [FromForm(Name = "donation")]
-        [Range(10, 100_000)]
+        [Range(100, 1_000_000)]
         public string Donation { get; set; } = null!;
         
         [Required]
@@ -67,5 +67,20 @@ namespace OpenRace.Features.Registration
         [FromForm(Name = "registeredBy")]
         [MaxLength(200)]
         public string? RegisteredBy { get; set; }
+        
+        [Display(Name = "Имя родителя")]
+        [FromForm(Name = "parent_first_name")]
+        [MaxLength(50)]
+        public string? ParentFirstName { get; set; }
+
+        [Display(Name = "Фамилия родителя")]
+        [FromForm(Name = "parent_last_name")]
+        [MaxLength(50)]
+        public string? ParentLastName { get; set; }
+
+        [Display(Name = "Отчество родителя")]
+        [FromForm(Name = "parent_patronymic_name")]
+        [MaxLength(50)]
+        public string? ParentPatronymicName { get; set; }
     }
 }

@@ -132,7 +132,8 @@ namespace OpenRace.Features.Registration
                 Enum.Parse<Gender>(model.Gender!),
                 int.Parse(model.DistanceKm!) * 1000,
                 model.Referer,
-                model.RegisteredBy
+                model.RegisteredBy,
+                $"{model.ParentLastName} {model.ParentFirstName} {model.ParentPatronymicName}"
             )
             {
                 Payment = payment

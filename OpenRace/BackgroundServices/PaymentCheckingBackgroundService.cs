@@ -8,6 +8,7 @@ using NodaTime;
 using OpenRace.Data;
 using OpenRace.Data.Ef;
 using OpenRace.Data.GSL;
+using OpenRace.Data.GSL.Abstractions;
 using OpenRace.Entities;
 using OpenRace.Exceptions;
 using OpenRace.Features.Payment;
@@ -31,7 +32,7 @@ public class PaymentCheckingBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        var timer = new PeriodicTimer(TimeSpan.FromHours(1));
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
             try

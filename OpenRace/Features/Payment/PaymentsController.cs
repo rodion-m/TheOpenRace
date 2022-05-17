@@ -4,18 +4,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OpenRace.Features.Communication;
 using OpenRace.Features.Registration;
-using Serilog;
-using Yandex.Checkout.V3;
 
 namespace OpenRace.Features.Payment
 {
+    //https://host/api/payments/notify?pwd=0ac8a951b5e842eb8798e55624ce2927
     [ApiController]
     [Route("api/[controller]")]
     public class PaymentsController : ControllerBase
     {
         private readonly PaymentService _paymentService;
         private readonly ILogger<PaymentsController> _logger;
-        private readonly IEmailService _emailService;
         private readonly RegistrationService _registrationService;
         private readonly AppConfig _appConfig;
 
@@ -24,7 +22,6 @@ namespace OpenRace.Features.Payment
         {
             _paymentService = paymentService;
             _logger = logger;
-            _emailService = emailService;
             _registrationService = registrationService;
             _appConfig = appConfig;
         }

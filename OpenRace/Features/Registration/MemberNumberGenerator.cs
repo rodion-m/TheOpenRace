@@ -8,12 +8,10 @@ namespace OpenRace.Features.Registration;
 public class MemberNumberGenerator : IMemberNumberGenerator
 {
     private readonly MembersRepository _members;
-    private readonly AppConfig _appConfig;
 
     public MemberNumberGenerator(MembersRepository members, AppConfig appConfig)
     {
         _members = members;
-        _appConfig = appConfig;
     }
     
     [Pure]

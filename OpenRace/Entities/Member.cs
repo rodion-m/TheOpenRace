@@ -7,7 +7,9 @@ namespace OpenRace.Entities
     [MetaEntity(DisplayName = "Участник", DisplayNamePlural = "Участники", Description = "Список участников")]
     public record Member : IEntity
     {
-        protected Member() {}
+        protected Member()
+        {
+        }
         public Member(
             Guid id, 
             Instant createdAt,
@@ -18,7 +20,8 @@ namespace OpenRace.Entities
             Gender gender, 
             int distance, 
             string? referer, 
-            string? registeredBy)
+            string? registeredBy, 
+            string? parentName)
         {
             Id = id;
             CreatedAt = createdAt;
@@ -30,6 +33,7 @@ namespace OpenRace.Entities
             Distance = distance;
             Referer = referer;
             RegisteredBy = registeredBy;
+            ParentName = parentName;
         }
 
         public const int AdultsAge = 17;
@@ -57,6 +61,7 @@ namespace OpenRace.Entities
         
         public string? RegisteredBy { get; set; }
         public Guid? ParentId { get; set; }
+        public string? ParentName { get; set; }
 
         //https://entityframeworkcore.com/knowledge-base/53063181/ef-core-database-specific-columns-to-nested-object
         [MetaEntityAttr(Enabled = false)]

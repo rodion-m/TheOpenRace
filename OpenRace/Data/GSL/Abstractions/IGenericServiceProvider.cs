@@ -1,6 +1,4 @@
-﻿using OpenRace.Data.GSL.Abstractions;
-
-namespace OpenRace.Data.GSL;
+﻿namespace OpenRace.Data.GSL.Abstractions;
 
 public interface IGenericServiceProvider<TService1, TService2, TService3> 
     where TService1 : notnull 

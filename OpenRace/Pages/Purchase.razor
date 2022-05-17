@@ -18,6 +18,7 @@
 	{
 		<h2 style="color: green">Участие в забеге подтверждено!</h2>
 		<h3 style="color: green">Вы бежите под номером: @(_member.Number)</h3>
+		<button class="btn btn-primary" @onclick="OpenSite">Вернуться на сайт</button>
 	}
 	else
 	{
@@ -70,4 +71,5 @@ else
 		NavigationManager.NavigateTo(redirectUri.ToString());
 	}
 
+	void OpenSite() => NavigationManager.NavigateTo(AppConfig.SiteUrl);
 }
