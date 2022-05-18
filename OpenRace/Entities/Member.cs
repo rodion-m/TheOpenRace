@@ -59,6 +59,8 @@ namespace OpenRace.Entities
 
         public int? Number { get; set; }
         
+        
+        [MetaEntityAttr(Enabled = false)]
         public Duration? RaceResult { get; set; }
         
         public bool Subscribed { get; set; } = true;

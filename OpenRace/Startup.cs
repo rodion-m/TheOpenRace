@@ -138,7 +138,10 @@ namespace OpenRace
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapEasyData(options => { options.UseDbContext<AppDbContext>(); });
+                endpoints.MapEasyData(options =>
+                {
+                    options.UseDbContext<AppDbContext>();
+                });
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
                 endpoints.MapControllers();

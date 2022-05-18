@@ -9,6 +9,7 @@ using OpenRace.Extensions;
 namespace OpenRace
 {
     public record AppConfig(
+        string Title,
         string SiteUrl,
         string Hostname,
         ZonedDateTime RaceStartTime,
@@ -31,11 +32,12 @@ namespace OpenRace
                 Offset.FromHours(3)
             );
             Current = new AppConfig(
+                "Забег в Перово",
                     "https://svzabeg.ru/", 
                 "https://perovo-zabeg.azurewebsites.net/", //"https://panel.svzabeg.ru/",
                 raceStartTime,
                 raceStartTime.Date.At(new LocalTime(9, 0)),
-                "Храм св. Владимира",
+                "Фонд храма св. Владимира",
                 "info@svzabeg.ru",
                 new Guid("82ECE55A-EC6E-46AA-99B6-C8ED3B34D835"),
                 DefaultCultureInfo: new CultureInfo("ru"),
