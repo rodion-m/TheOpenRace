@@ -12,20 +12,20 @@ using OpenRace.Features.Communication;
 
 namespace OpenRace.Jobs
 {
-    public class SendEmailNotificationJob : IInvocable
+    public class SendRaceStartingEmailNotificationsJob : IInvocable
     {
         private readonly IEmailService _mailService;
         private readonly MembersRepository _repo;
         private readonly IClock _clock;
         private readonly AppConfig _appConfig;
-        private readonly ILogger<SendEmailNotificationJob> _logger;
+        private readonly ILogger<SendRaceStartingEmailNotificationsJob> _logger;
 
-        public SendEmailNotificationJob(
+        public SendRaceStartingEmailNotificationsJob(
             IEmailService mailService, 
             MembersRepository repo, 
             IClock clock, 
             AppConfig appConfig, 
-            ILogger<SendEmailNotificationJob> logger
+            ILogger<SendRaceStartingEmailNotificationsJob> logger
             )
         {
             _mailService = mailService;

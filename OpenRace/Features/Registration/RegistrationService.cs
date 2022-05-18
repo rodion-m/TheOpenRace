@@ -133,7 +133,9 @@ namespace OpenRace.Features.Registration
                 int.Parse(model.DistanceKm!) * 1000,
                 model.Referer,
                 model.RegisteredBy,
-                $"{model.ParentLastName} {model.ParentFirstName} {model.ParentPatronymicName}"
+                $"{model.ParentLastName} {model.ParentFirstName} {model.ParentPatronymicName}",
+                model.Region,
+                model.District
             )
             {
                 Payment = payment

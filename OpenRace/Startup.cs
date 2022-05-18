@@ -82,7 +82,7 @@ namespace OpenRace
             services.AddCache();
 
             services.AddScheduler();
-            services.AddTransient<SendEmailNotificationJob>();
+            services.AddTransient<SendRaceStartingEmailNotificationsJob>();
             services.AddTransient<SendResultsToEmailJob>();
 
             services.AddSingleton<IClock>(SystemClock.Instance);
@@ -150,8 +150,8 @@ namespace OpenRace
             var provider = app.ApplicationServices;
             provider.UseScheduler(scheduler =>
             {
-                //scheduler.Schedule<SendEmailNotificationJob>().EveryMinute();
-                scheduler.Schedule<SendResultsToEmailJob>().EveryMinute();
+                //scheduler.Schedule<SendRaceStartingEmailNotificationsJob>().EveryMinute();
+                //scheduler.Schedule<SendResultsToEmailJob>().EveryMinute();
             });
         }
     }

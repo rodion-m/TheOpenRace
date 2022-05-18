@@ -82,5 +82,15 @@ namespace OpenRace.Features.Registration
         [FromForm(Name = "parent_patronymic_name")]
         [MaxLength(50)]
         public string? ParentPatronymicName { get; set; }
+        
+        [Display(Name = "Округ участника")]
+        [FromForm(Name = "region")]
+        [MaxLength(50)]
+        public string? Region { get; set; }
+        
+        [Display(Name = "Район участника")]
+        [FromForm(Name = "district")]
+        [MaxLength(50)]
+        public string? District { get; set; }
     }
 }
