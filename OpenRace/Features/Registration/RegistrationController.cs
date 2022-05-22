@@ -38,11 +38,10 @@ namespace OpenRace.Features.Registration
                 return BadRequest($"Неизвестная дистанция: {model.DistanceKm}");
             }
 
-            var rqf = Request.HttpContext.Features.Get<IRequestCultureFeature>()!;
-            var culture = rqf.RequestCulture.Culture;
-            var hostUrl = $"{Request.Scheme}://{Request.Host}/";
-            var redirectUri = await _registrationService.Register(
-                model, hostUrl, culture, true);
+            // var rqf = Request.HttpContext.Features.Get<IRequestCultureFeature>()!;
+            // var culture = rqf.RequestCulture.Culture;
+            // var hostUrl = $"{Request.Scheme}://{Request.Host}/";
+            var redirectUri = await _registrationService.RegisterOrUpdate(model);
             
             if (!decimal.TryParse(model.Donation, out _))
             {

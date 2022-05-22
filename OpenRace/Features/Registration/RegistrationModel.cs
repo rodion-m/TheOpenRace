@@ -11,7 +11,7 @@ namespace OpenRace.Features.Registration
         [Required]
         [Display(Name = "Сумма пожертвования")]
         [FromForm(Name = "donation")]
-        [Range(100, 1_000_000)]
+        [Range(10, 1_000_000)]
         public string Donation { get; set; } = null!;
         
         [Required]

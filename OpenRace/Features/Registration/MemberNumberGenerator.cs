@@ -20,4 +20,6 @@ public class MemberNumberGenerator : IMemberNumberGenerator
         var lastMember = await _members.GetLastMemberNumber();
         return (lastMember?.Number ?? 0) + 1;
     }
+
+    public bool ShouldResetMemberNumber(Member newMember, Member existedMember) => false;
 }

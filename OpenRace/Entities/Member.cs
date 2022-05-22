@@ -42,10 +42,12 @@ namespace OpenRace.Entities
 
         public const int AdultsAge = 17;
 
+        [MetaEntityAttr(Index = int.MaxValue, Editable = false, ShowOnView = false)]
         public Guid Id { get; init; }
         [MetaEntityAttr(Enabled = false)]
         public Instant CreatedAt { get; set; }
 
+        [MetaEntityAttr(Index = 1)]
         public string FullName { get; set; } = "";
         public string? Email { get; set; }
         public string? Phone { get; set; }
@@ -57,6 +59,7 @@ namespace OpenRace.Entities
         
         public string? Referer { get; set; }
 
+        [MetaEntityAttr(Index = 0, Sorting = 1)]
         public int? Number { get; set; }
         
         
@@ -66,6 +69,8 @@ namespace OpenRace.Entities
         public bool Subscribed { get; set; } = true;
         
         public string? RegisteredBy { get; set; }
+        
+        [MetaEntityAttr(Enabled = false)]
         public Guid? ParentId { get; set; }
         public string? ParentName { get; set; }
         
@@ -76,6 +81,8 @@ namespace OpenRace.Entities
         //https://entityframeworkcore.com/knowledge-base/53063181/ef-core-database-specific-columns-to-nested-object
         [MetaEntityAttr(Enabled = false)]
         public Payment? Payment { get; set; }
+
+        public string DistanceInKm => (Distance / 1000).ToString();
 
         public bool IsChild() => Age < AdultsAge;
         public bool IsAdult() => Age >= AdultsAge;

@@ -22,4 +22,9 @@ public class MemberNumberGeneratorByDistance : IMemberNumberGenerator
         var lastMember = await _members.GetLastMemberNumberByDistance(member.Distance);
         return _appConfig.GetNextMemberNumber(member.Distance, lastMember?.Number);
     }
+
+    public bool ShouldResetMemberNumber(Member existedMember, Member newMember)
+    {
+        return newMember.Distance != existedMember.Distance;
+    }
 }

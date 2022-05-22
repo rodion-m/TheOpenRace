@@ -20,8 +20,8 @@
 	else
 	{
 		<h2 style="color: green">Участие в забеге подтверждено!</h2>
-		<h3>@(_member.FullName)</h3>
 		<h3>Вы бежите под номером: @(_member.Number)</h3>
+		<h3>Дистанция: @(_member.DistanceInKm) км.</h3>
 		if (Session.IsAuthorized())
 		{
 			<button class="btn btn-primary" @onclick="OpenRegistration">Зарегистрировать еще</button>

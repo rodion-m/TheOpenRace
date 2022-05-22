@@ -45,81 +45,84 @@ namespace OpenRace.Features.Registration
             _memberNumberGenerator = memberNumberGenerator;
         }
 
-        private static readonly AsyncLock _registrationMutex = new();
 
-        public async Task<(RegistrationResult, Member)> RegisterOrUpdate(Member member)
-        {
-            using var locking = await _registrationMutex.LockAsync();
-            var existedMember = await _members.FirstOrDefaultAsync(
-                new MemberByEmailAndName(member.Email, member.FullName));
-
-            if (existedMember != null)
-            {
-                member = member with
-                {
-                    Id = existedMember.Id
-                };
-                if (member.Distance == existedMember.Distance)
-                {
-                    member.Number = existedMember.Number;
-                }
-
-                await _members.DeleteAsync(existedMember);
-            }
-
-            await _members.AddAsync(member);
-            return (existedMember != null ? RegistrationResult.Registered : RegistrationResult.Updated, member);
-        }
-
-        public async Task<Uri> Register(
-            RegistrationModel model, string hostUrl, CultureInfo cultureInfo, bool payNow)
+        public async Task<Uri> RegisterOrUpdate(RegistrationModel model)
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
-            if (hostUrl == null) throw new ArgumentNullException(nameof(hostUrl));
-            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
 
             if (!decimal.TryParse(model.Donation, out var donation))
             {
                 throw new InvalidOperationException($"{nameof(model.Donation)} is not decimal ({model.Donation})");
             }
             
-            var paymentHash = Guid.NewGuid().ToString();
-            Entities.Payment? payment = null;
-            Uri? redirectUri = null;
-            if (payNow)
+            var newMember = CreateMemberFromRegistrationModel(model);
+            var existedMember = await _members.FirstOrDefaultAsync(
+                new MemberByEmailAndName(newMember.Email, newMember.FullName));
+            
+            Uri? redirectUri;
+            if (existedMember is not null)
             {
-                (payment, redirectUri) = await _paymentService.CreatePayment(
-                    donation,
-                    paymentHash,
-                    hostUrl
-                );
+                (newMember, redirectUri) = await UpdateMember(existedMember, newMember, donation);
+            }
+            else
+            {
+                redirectUri = await RegisterMember(newMember, donation);
             }
 
-            var (_, member) = await RegisterMember(model, payment);
-            // if (member.Email != null && EmailValidator.Validate(member.Email))
-            // {
-            //     _queue.QueueAsyncTask(() => _emailService.SendMembershipConfirmedMessage(member, cultureInfo));
-            // }
+            if (!_appConfig.PaymentRequired && newMember.Number == null)
+            {
+                await AssignNewMemberNumber(newMember);
+            }
+            if (!_appConfig.PaymentRequired)
+            {
+                if (newMember.Email != null && EmailValidator.Validate(newMember.Email))
+                {
+                    _queue.QueueAsyncTask(() 
+                        => _emailService.SendMembershipConfirmedMessage(newMember, _appConfig.DefaultCultureInfo));
+                }
+            }
 
-            redirectUri ??= _appConfig.GetConfirmedPageUri(hostUrl, member.Id);
+            redirectUri ??= _appConfig.GetConfirmedPageUri(newMember.Id);
             return redirectUri;
         }
 
-        private async Task<(RegistrationResult, Member)> RegisterMember(
-            RegistrationModel model,
-            Entities.Payment? payment)
+        private async Task<(Member member, Uri? redirectUri)> UpdateMember(
+            Member existedMember, Member newMember, decimal donation)
         {
-            var member = CreateMemberFromRegistrationModel(model, payment);
-            using var locking = await _memberNumberMutex.LockAsync();
-            if (payment == null)
+            newMember = newMember with
             {
-                member.Number = await _memberNumberGenerator.GetNewMemberNumber(member);
+                Id = existedMember.Id,
+                Number = existedMember.Number,
+                Payment = existedMember.Payment
+            };
+            if (_memberNumberGenerator.ShouldResetMemberNumber(existedMember, newMember))
+            {
+                newMember.Number = null;
             }
-
-            return await RegisterOrUpdate(member);
+            
+            Uri? redirectUri = null;
+            if (_appConfig.PaymentRequired && existedMember.Payment?.PaidAt == null)
+            {
+                (newMember.Payment, redirectUri) = await _paymentService.CreatePayment(donation, _appConfig.Host);
+            }
+            
+            await _members.DeleteAsync(existedMember);
+            await _members.AddAsync(newMember);
+            return (newMember, redirectUri);
         }
 
-        private Member CreateMemberFromRegistrationModel(RegistrationModel model, Entities.Payment? payment)
+        private async Task<Uri?> RegisterMember(Member member, decimal donation)
+        {
+            Uri? redirectUri = null;
+            if (_appConfig.PaymentRequired)
+            {
+                (member.Payment, redirectUri) = await _paymentService.CreatePayment(donation, _appConfig.Host);
+            }
+            await _members.AddAsync(member);
+            return redirectUri;
+        }
+        
+        private Member CreateMemberFromRegistrationModel(RegistrationModel model)
         {
             model.Phone.TryStandardizePhoneNumber(out var phone);
             var member = new Member(
@@ -136,10 +139,7 @@ namespace OpenRace.Features.Registration
                 $"{model.ParentLastName} {model.ParentFirstName} {model.ParentPatronymicName}",
                 model.Region,
                 model.District
-            )
-            {
-                Payment = payment
-            };
+            );
             return member;
         }
 

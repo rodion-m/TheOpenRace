@@ -11,15 +11,18 @@ namespace OpenRace
     public record AppConfig(
         string Title,
         string SiteUrl,
-        string Hostname,
+        string Host,
         ZonedDateTime RaceStartTime,
         LocalDateTime NotifyMemberAt,
+        LocalTime PaymentNotificationSendingTime,
         string SenderName,
         string SenderEmailAddress,
         Guid RaceId,
         CultureInfo DefaultCultureInfo,
+        bool PaymentRequired,
         AppConfig.DistanceInfo[] AvailableDistances,
-        Duration MinLapDuration)
+        Duration MinLapDuration
+    )
     {
         public static readonly AppConfig Current;
 
@@ -37,10 +40,12 @@ namespace OpenRace
                 "https://perovo-zabeg.azurewebsites.net/", //"https://panel.svzabeg.ru/",
                 raceStartTime,
                 raceStartTime.Date.At(new LocalTime(9, 0)),
+                new LocalTime(12, 0),
                 "Фонд храма св. Владимира",
                 "info@svzabeg.ru",
                 new Guid("82ECE55A-EC6E-46AA-99B6-C8ED3B34D835"),
                 DefaultCultureInfo: new CultureInfo("ru"),
+                true,
                 AvailableDistances: new DistanceInfo[]
                 {
                     new(1000,
@@ -101,7 +106,7 @@ namespace OpenRace
             throw new AppException($"Incorrect ranges: {string.Join("; ", ranges)}");
         }
 
-        public string GetLink(string location) => $"{Hostname}{location}";
+        public Uri GetLink(string location) => new($"{Host}{location}");
 
         public record DistanceInfo(
             int DistanceMt, 
@@ -116,9 +121,6 @@ namespace OpenRace
 
         public DistanceInfo GetDistanceInfo(int distance) => AvailableDistances.First(it => it.DistanceMt == distance);
 
-        public Uri GetConfirmedPageUri(string hostUrl, Guid memberId)
-        {
-            return new Uri($"{hostUrl}confirmed/{memberId}");
-        }
+        public Uri GetConfirmedPageUri(Guid memberId) => GetLink($"confirmed/{memberId}");
     }
 }

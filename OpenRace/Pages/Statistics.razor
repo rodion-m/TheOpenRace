@@ -76,7 +76,7 @@
 			</Column>
 			<Column TableItem="Member" Title="Дистанция (км)" Field="@(x => x.Distance)" Sortable="true" Filterable="true" Width="10%" Format="N0">
 				<Template>
-					<span>@(context.Distance / 1000)</span>
+					<span>@(context.DistanceInKm)</span>
 				</Template>
 			</Column>
 			<Column TableItem="Member" Title="Возраст" Field="@(x => x.Age)" Sortable="true" Filterable="true" Width="10%"/>
@@ -102,7 +102,6 @@ else
 }
 
 @code {
-
 	private record StatisticsData(List<Member> AllMembers)
 	{
 		public int Count(int? distance, Gender? gender = null, bool? children = null)
@@ -119,7 +118,11 @@ else
 	protected override async Task OnAuthorizedAsync()
 	{
 		await base.OnAuthorizedAsync();
-		_statisticsData = new StatisticsData(await MembersRepo.AllAsync().OrderByDescending(it => it.CreatedAt).ToListAsync());
+		var members = await MembersRepo.AllAsync()
+			.OrderByDescending(it => it.Number)
+			.ThenByDescending(it => it.CreatedAt)
+			.ToListAsync();
+		_statisticsData = new StatisticsData(members);
 		StateHasChanged();
 	}
 

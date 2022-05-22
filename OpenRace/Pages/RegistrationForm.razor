@@ -93,7 +93,7 @@
 }
 else
 {
-	@NavigationManager.ToAbsoluteUri(AppConfig.SiteUrl)
+	<button class="btn btn-primary" @onclick="OpenSite">Вернуться на сайт</button>
 }
 
 @code {
@@ -112,8 +112,7 @@ else
 			{
 				model.RegisteredBy = Session.UserName;
 			}
-			var redirectUri = await RegistrationService.Register(
-				model, NavigationManager.BaseUri, CultureInfo.CurrentCulture, true);
+			var redirectUri = await RegistrationService.RegisterOrUpdate(model);
 			NavigationManager.NavigateTo(redirectUri.ToString());
 		}
 		finally
@@ -121,4 +120,15 @@ else
 			_busy = false;
 		}
 	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		await base.OnAfterRenderAsync(firstRender);
+		if (!Session.IsAuthorized())
+		{
+			OpenSite();
+		}
+	}
+
+	void OpenSite() => NavigationManager.NavigateTo(AppConfig.SiteUrl);
 }

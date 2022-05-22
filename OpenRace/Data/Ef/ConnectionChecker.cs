@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace OpenRace.Data.Ef
 {
@@ -12,5 +14,13 @@ namespace OpenRace.Data.Ef
         }
 
         public Task<bool> CanConnect() => _dbContext.Database.CanConnectAsync();
+
+        public async Task<TimeSpan> Ping()
+        {
+            var stopwatch = Stopwatch.StartNew();
+            await CanConnect();
+            stopwatch.Stop();
+            return stopwatch.Elapsed;
+        }
     }
 }

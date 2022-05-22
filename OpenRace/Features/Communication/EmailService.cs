@@ -42,12 +42,19 @@ namespace OpenRace.Features.Communication
                 "Поздравляем!" +
                 "<br/>Участие в забеге подтверждено!", 
                 $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
-                $"Имя участника: {member.FullName}<br/>Вы бежите под номером: {member.Number}",
+                $"Имя участника: {member.FullName}" 
+                + $"<br/>Вы бежите под номером: {member.Number}"
+                + $"<br/>Дистанция: {member.DistanceInKm} км.",
                 "Ждем вас!",
                 _appConfig.SiteUrl,
-                _appConfig.GetLink($"unsubscribe/{member.Id}")
+                GetUnsubscribeUri(member)
             );
             return _emailSender.Send($"Участник забега № {member.Number} {member.FullName}", html,  member.Email);
+        }
+
+        private string GetUnsubscribeUri(Member member)
+        {
+            return _appConfig.GetLink($"unsubscribe/{member.Id}").ToString();
         }
     }
 }

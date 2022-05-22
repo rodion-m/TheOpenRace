@@ -49,8 +49,9 @@ namespace OpenRace.Features.Payment
 
 
         public async Task<(Entities.Payment payment, Uri redirectUri)> CreatePayment(
-            decimal amount, string hash, string hostUrl)
+            decimal amount, string hostUrl, string? hash = null)
         {
+            hash ??= Guid.NewGuid().ToString();
             var newPayment = new NewPayment
             {
                 Amount = new Amount { Value = amount },
@@ -60,7 +61,7 @@ namespace OpenRace.Features.Payment
                     ReturnUrl = CreateReturnPageUri(hash, hostUrl)
                 },
                 Capture = true,
-                Description = "Взнос за участие в благоритворительном забеге"
+                Description = "Взнос за участие в благотворительном забеге"
             };
             var payment = await _asyncClient.CreatePaymentAsync(newPayment);
 
@@ -74,10 +75,8 @@ namespace OpenRace.Features.Payment
         public async Task<Uri> ReCreatePayment(Member member, string hostUrl, decimal donation)
         {
             if (member == null) throw new ArgumentNullException(nameof(member));
-            var hash = Guid.NewGuid().ToString();
             var (payment, redirectUri) = await CreatePayment(
                 donation,
-                hash,
                 hostUrl
             );
             member.Payment = payment;

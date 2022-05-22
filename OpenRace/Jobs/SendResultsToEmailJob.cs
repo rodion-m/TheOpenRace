@@ -52,7 +52,8 @@ namespace OpenRace.Jobs
                 try
                 {
                     //TODO вынести отправку в EmailService
-                    var htmlBody = _messageHtml.Replace("{{unsubscribeUri}}", _appConfig.GetLink($"unsubscribe/{member.Id}"));
+                    var unsubscribeUri = _appConfig.GetLink($"unsubscribe/{member.Id}").ToString();
+                    var htmlBody = _messageHtml.Replace("{{unsubscribeUri}}", unsubscribeUri);
                     await _mailService.Send("Подводим итоги забега в Перово", htmlBody, member.Email!);
                     _logger.LogInformation("Email sent to {Email}", member.Email);
                 }

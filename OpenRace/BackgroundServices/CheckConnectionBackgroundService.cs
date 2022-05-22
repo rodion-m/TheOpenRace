@@ -23,10 +23,8 @@ namespace OpenRace.BackgroundServices
             var canConnect = await _checker.CanConnect();
             if (canConnect)
             {
-                var stopwatch = Stopwatch.StartNew();
-                await _checker.CanConnect();
-                stopwatch.Stop();
-                _logger.LogInformation("!!! Db connected. Ping: {Ping} ms. !!!", stopwatch.ElapsedMilliseconds);
+                var ping = await _checker.Ping();
+                _logger.LogInformation("!!! Db connected. Ping: {Ping:N0} ms. !!!", ping.TotalMilliseconds);
             }
             else
             {
