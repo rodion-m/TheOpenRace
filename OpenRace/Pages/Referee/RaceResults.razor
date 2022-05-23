@@ -9,6 +9,7 @@
 @using BlazorTable
 @using MoreLinq
 @using OpenRace.Features.RaceEvents
+@using OpenRace.Helpers
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
 
@@ -242,26 +243,29 @@ else
 	private async Task ExportResultsToCsv()
 	{
 		if (results == null) throw new NullReferenceException(nameof(results));
+		var headers = new[] { "Место", "Имя", "Результат", "Луч. круг", "№", "Пол" };
+		var rows = results.Select(it => new string[]
+		{
+			it.Position.ToString()!, it.Member.FullName.Trim(), it.RaceTimeAsString, it.BestLapAsString, 
+			it.Member.Number.ToString()!, it.Member.Gender == Gender.Male ? "М" : "Ж"
+		});
+		var csv = TinyCsvHelper.CreateCsvContent(headers, rows);
+		await BlazorDownloadFileService.DownloadFileFromText(GetCsvFileName(), csv, Encoding.UTF8, "text/plain");
+	}
+
+	private string GetCsvFileName()
+	{
 		string childrenRu = _filter.Children switch {
 			0 => "взрослые",
 			1 => "дети",
 			_ => "все"
-		};
+			};
 		string genderRu = _filter.Gender switch {
 			Gender.Male => "М",
 			Gender.Female => "Ж",
 			_ => "МЖ"
-		};
-		var fileName = $"results_{_filter.Distance}m_{genderRu}_{childrenRu}.csv".ToLower();
-		var headers = new[] { "Место", "Имя", "Результат", "Луч. круг", "№", "Пол" };
-		var values = results.Select(it => new []
-		{
-			it.Position.ToString(), it.Member.FullName.Trim(), it.RaceTimeAsString, it.BestLapAsString, it.Member.Number?.ToString(), it.Member.Gender == Gender.Male ? "М" : "Ж"
-		});
-		var csv = new[] {headers}.Concat(values)
-			.Select(it => string.Join(',', it))
-			.ToDelimitedString("\r\n");
-		await BlazorDownloadFileService.DownloadFileFromText(fileName, csv, Encoding.UTF8, "text/plain");
+			};
+		return $"results_{_filter.Distance}m_{genderRu}_{childrenRu}.csv".ToLower();
 	}
 
 }

@@ -77,6 +77,9 @@ namespace OpenRace.Entities
         public string? Region { get; set; }
         
         public string? District { get; set; }
+        
+        [MetaEntityAttr(Enabled = false)]
+        public Instant? PaymentNotificationSentAt { get; set; }
 
         //https://entityframeworkcore.com/knowledge-base/53063181/ef-core-database-specific-columns-to-nested-object
         [MetaEntityAttr(Enabled = false)]
@@ -84,9 +87,6 @@ namespace OpenRace.Entities
 
         public string DistanceInKm => (Distance / 1000).ToString();
         
-        [MetaEntityAttr(Enabled = false)]
-        public Instant? PaymentNotificationSentAt { get; set; }
-
         public bool IsChild() => Age < AdultsAge;
         public bool IsAdult() => Age >= AdultsAge;
     }
