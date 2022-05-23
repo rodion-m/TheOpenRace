@@ -84,6 +84,7 @@ namespace OpenRace
             services.AddScheduler();
             services.AddTransient<SendRaceStartingEmailNotificationsJob>();
             services.AddTransient<SendResultsToEmailJob>();
+            services.AddTransient<SendPaymentEmailNotificationsJob>();
 
             services.AddSingleton<IClock>(SystemClock.Instance);
             services.AddSingleton(AppConfig.Current);
@@ -94,7 +95,7 @@ namespace OpenRace
             services.AddSingleton<RaceEventsCache>();
             services.AddSingleton<EmailTemplates>();
             services.AddSingleton<IEmailSender, AmazonSESEmailSender>();
-            services.AddSingleton<IEmailService, EmailService>();
+            services.AddSingleton<EmailService, EmailService>();
             services.AddSingleton(typeof(IGenericServiceProvider<,,>), typeof(GenericServiceProvider<,,>));
             services.AddScoped<MembersRepository>();
             services.AddScoped<RaceEventsRepository>();
@@ -155,6 +156,7 @@ namespace OpenRace
             {
                 //scheduler.Schedule<SendRaceStartingEmailNotificationsJob>().EveryMinute();
                 //scheduler.Schedule<SendResultsToEmailJob>().EveryMinute();
+                scheduler.Schedule<SendPaymentEmailNotificationsJob>().EveryMinute();
             });
         }
     }

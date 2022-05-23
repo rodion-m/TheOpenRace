@@ -37,7 +37,7 @@ namespace OpenRace.Jobs
         public async Task Invoke()
         {
             var sendEmailsAt = new LocalDate(2021, 11, 8).At(new LocalTime(15, 12));
-            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartTime.Zone).LocalDateTime;
+            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartsAt.Zone).LocalDateTime;
             if (!now.IsEqualAccurateToMinute(sendEmailsAt))
             {
                 return;

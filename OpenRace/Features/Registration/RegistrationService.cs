@@ -23,7 +23,7 @@ namespace OpenRace.Features.Registration
         private readonly PaymentService _paymentService;
         private readonly IClock _clock;
         private readonly AppConfig _appConfig;
-        private readonly IEmailService _emailService;
+        private readonly EmailService _emailService;
         private readonly IQueue _queue;
         private readonly IMemberNumberGenerator _memberNumberGenerator;
 
@@ -32,7 +32,7 @@ namespace OpenRace.Features.Registration
             PaymentService paymentService, 
             IClock clock,
             AppConfig appConfig, 
-            IEmailService emailService, 
+            EmailService emailService, 
             IQueue queue,
             IMemberNumberGenerator memberNumberGenerator)
         {
@@ -83,6 +83,7 @@ namespace OpenRace.Features.Registration
             }
 
             redirectUri ??= _appConfig.GetConfirmedPageUri(newMember.Id);
+            
             return redirectUri;
         }
 

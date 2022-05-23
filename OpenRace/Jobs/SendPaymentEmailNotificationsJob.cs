@@ -14,22 +14,22 @@ namespace OpenRace.Jobs
 {
     public class SendPaymentEmailNotificationsJob : IInvocable
     {
-        private readonly IEmailService _mailService;
-        private readonly MembersRepository _repo;
+        private readonly EmailService _mailService;
+        private readonly MembersRepository _members;
         private readonly IClock _clock;
         private readonly AppConfig _appConfig;
         private readonly ILogger<SendPaymentEmailNotificationsJob> _logger;
 
         public SendPaymentEmailNotificationsJob(
-            IEmailService mailService, 
-            MembersRepository repo, 
+            EmailService mailService, 
+            MembersRepository members, 
             IClock clock, 
             AppConfig appConfig, 
             ILogger<SendPaymentEmailNotificationsJob> logger
             )
         {
             _mailService = mailService;
-            _repo = repo;
+            _members = members;
             _clock = clock;
             _appConfig = appConfig;
             _logger = logger;
@@ -38,24 +38,25 @@ namespace OpenRace.Jobs
         public async Task Invoke()
         {
             var sendEmailsAt = _appConfig.PaymentNotificationSendingTime;
-            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartTime.Zone).LocalDateTime;
+            var now = _clock.GetCurrentInstant()
+                .InZone(_appConfig.RaceStartsAt.Zone).LocalDateTime;
             if (!now.IsEqualAccurateToMinute(now.Date.At(sendEmailsAt)))
             {
                 return;
             }
-            var members = await _repo.GetSubscribedMembers().ToListAsync();
+            var members = await _members.GetSubscribedMembers().ToListAsync();
             members = members.Where(it => it.Payment!.PaidAt == null)
                 .Where(it => it.CreatedAt > _clock.GetCurrentInstant().Minus(Duration.FromHours(5)))
-                //.Where(it => it.PaymentNotificationSentAt == null) // TODO
+                .Where(it => it.PaymentNotificationSentAt == null)
                 .ToList();
             
             foreach(var member in members.Where(it => it.Email != null && EmailValidator.Validate(it.Email)).Shuffle())
             {
                 try
                 {
-                    //await _mailService.SendPaymentNotificationMessage(member, _appConfig.DefaultCultureInfo);
-                    //member.PaymentNotificationSentAt = _clock.GetCurrentInstant();
-                    await _repo.UpdateAsync(member);
+                    await _mailService.SendPaymentNotificationMessage(member, _appConfig.DefaultCultureInfo);
+                    member.PaymentNotificationSentAt = _clock.GetCurrentInstant();
+                    await _members.UpdateAsync(member);
                 }
                 catch (Exception e)
                 {

@@ -12,7 +12,8 @@ namespace OpenRace
         string Title,
         string SiteUrl,
         string Host,
-        ZonedDateTime RaceStartTime,
+        ZonedDateTime RaceStartsAt,
+        ZonedDateTime RegistrationEndsAt,
         LocalDateTime NotifyMemberAt,
         LocalTime PaymentNotificationSendingTime,
         string SenderName,
@@ -28,18 +29,26 @@ namespace OpenRace
 
         static AppConfig()
         {
-            var raceStartTime = new ZonedDateTime(
+            var raceStartsAt = new ZonedDateTime(
                 new LocalDate(2022, 5, 28)
                     .At(new LocalTime(14, 00, 00)),
                 DateTimeZoneProviders.Tzdb["Europe/Moscow"],
                 Offset.FromHours(3)
             );
+            var registrationEndsAt = new ZonedDateTime(
+                new LocalDate(2022, 5, 26)
+                    .At(new LocalTime(18, 00, 00)),
+                DateTimeZoneProviders.Tzdb["Europe/Moscow"],
+                Offset.FromHours(3)
+            );
+            
             Current = new AppConfig(
                 "Забег в Перово",
                     "https://svzabeg.ru/", 
                 "https://perovo-zabeg.azurewebsites.net/", //"https://panel.svzabeg.ru/",
-                raceStartTime,
-                raceStartTime.Date.At(new LocalTime(9, 0)),
+                raceStartsAt,
+                registrationEndsAt,
+                raceStartsAt.Date.At(new LocalTime(9, 0)),
                 new LocalTime(12, 0),
                 "Фонд храма св. Владимира",
                 "info@svzabeg.ru",
@@ -74,7 +83,10 @@ namespace OpenRace
         }
 
         public string GetRaceDateTimeAsString(CultureInfo? cultureInfo = null) =>
-            RaceStartTime.ToString("d MMMM yyyy HH:mm", cultureInfo ?? CultureInfo.CurrentUICulture);
+            RaceStartsAt.ToString("d MMMM yyyy HH:mm", cultureInfo ?? DefaultCultureInfo);
+        
+        public string GetRegistrationEndingDateTimeAsString(CultureInfo? cultureInfo = null) =>
+            RegistrationEndsAt.ToString("d MMMM yyyy HH:mm", cultureInfo ?? DefaultCultureInfo);
 
         public int GetNextMemberNumber(int distance, int? currentLastNumber)
         {
@@ -107,6 +119,7 @@ namespace OpenRace
         }
 
         public Uri GetLink(string location) => new($"{Host}{location}");
+        public Uri GetLink(params string[] uriSegments) => new($"{Host}/{string.Join("/", uriSegments)}");
 
         public record DistanceInfo(
             int DistanceMt, 

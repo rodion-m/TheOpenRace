@@ -14,14 +14,14 @@ namespace OpenRace.Jobs
 {
     public class SendRaceStartingEmailNotificationsJob : IInvocable
     {
-        private readonly IEmailService _mailService;
+        private readonly EmailService _mailService;
         private readonly MembersRepository _repo;
         private readonly IClock _clock;
         private readonly AppConfig _appConfig;
         private readonly ILogger<SendRaceStartingEmailNotificationsJob> _logger;
 
         public SendRaceStartingEmailNotificationsJob(
-            IEmailService mailService, 
+            EmailService mailService, 
             MembersRepository repo, 
             IClock clock, 
             AppConfig appConfig, 
@@ -38,7 +38,7 @@ namespace OpenRace.Jobs
         public async Task Invoke()
         {
             var sendEmailsAt = _appConfig.NotifyMemberAt;
-            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartTime.Zone).LocalDateTime;
+            var now = _clock.GetCurrentInstant().InZone(_appConfig.RaceStartsAt.Zone).LocalDateTime;
             if (!now.IsEqualAccurateToMinute(sendEmailsAt))
             {
                 return;

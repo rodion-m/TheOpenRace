@@ -16,7 +16,7 @@ using Serilog;
 
 namespace OpenRace.Features.Communication
 {
-    public class EmailService : IEmailService
+    public class EmailService
     {
         private readonly AppConfig _appConfig;
         private readonly IEmailSender _emailSender;
@@ -55,6 +55,22 @@ namespace OpenRace.Features.Communication
         private string GetUnsubscribeUri(Member member)
         {
             return _appConfig.GetLink($"unsubscribe/{member.Id}").ToString();
+        }
+
+        public Task SendPaymentNotificationMessage(Member member, CultureInfo cultureInfo)
+        {
+            var html = _templates.GetTemplate1Html(
+                "Напоминание" +
+                "<br/>О внесении добровольного пожертвования", 
+                $"Дата и время забега: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
+                $"Имя участника: {member.FullName}" 
+                + "<br/>Для участия в забеге необходимо внести добровольное пожертвование " 
+                + $"до {_appConfig.GetRegistrationEndingDateTimeAsString(cultureInfo)}",
+                "Ждем вас!",
+                _appConfig.SiteUrl,
+                GetUnsubscribeUri(member)
+            );
+            return _emailSender.Send($"Напоминание о забеге для участника {member.FullName}", html,  member.Email);
         }
     }
 }
