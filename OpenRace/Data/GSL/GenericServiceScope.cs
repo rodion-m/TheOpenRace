@@ -9,9 +9,9 @@ internal abstract class GenericServiceScopeBase : IDisposable, IAsyncDisposable
 {
     protected readonly AsyncServiceScope Scope;
 
-    protected GenericServiceScopeBase(IServiceProvider serviceProvider)
+    protected GenericServiceScopeBase(IServiceScopeFactory serviceScopeFactory)
     {
-        Scope = serviceProvider.CreateAsyncScope();
+        Scope = serviceScopeFactory.CreateAsyncScope();
     }
 
     public void Dispose() => Scope.Dispose();
@@ -29,9 +29,9 @@ internal class GenericServiceScope<TService1, TService2, TService3>
     public TService2 Service2 => Scope.ServiceProvider.GetRequiredService<TService2>();
     public TService3 Service3 => Scope.ServiceProvider.GetRequiredService<TService3>();
 
-    public GenericServiceScope(IServiceProvider serviceProvider) : base(serviceProvider)
+    public GenericServiceScope(IServiceScopeFactory serviceScopeFactory) : base(serviceScopeFactory)
     {
-        if (serviceProvider == null) throw new ArgumentNullException(nameof(serviceProvider));
+        if (serviceScopeFactory == null) throw new ArgumentNullException(nameof(serviceScopeFactory));
     }
 
     public void Deconstruct(

@@ -43,20 +43,20 @@ namespace OpenRace.Data.Ef
                 .ToListAsync(cancellationToken: cancellationToken);
         }
         
-        public Task<Member?> GetLastMemberNumberByDistance(int distance)
+        public Task<Member?> GetLastMemberNumberByDistance(int distance, CancellationToken cancellationToken = default)
         {
             return _dbContext.Members.Where(it => it.Distance == distance && it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
         }
         
-        public Task<Member?> GetLastMemberNumber()
+        public Task<Member?> GetLastMemberNumber(CancellationToken cancellationToken = default)
         {
             return _dbContext.Members.Where(it => it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
         }
         
         public override Task<Member> GetById(Guid id, CancellationToken cancellationToken = default)

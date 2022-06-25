@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Coravel.Queuing.Interfaces;
 using EmailValidation;
@@ -154,22 +155,27 @@ namespace OpenRace.Features.Registration
         private static readonly AsyncLock _memberNumberMutex = new();
 
         public async Task<Member> SetMembershipPaid(
-            Member member, bool assignNumberIfItsNot = true, bool notifyByEmail = true)
+            Member member, 
+            bool assignNumberIfItsNot = true, 
+            bool notifyByEmail = true, 
+            CancellationToken cancellationToken = default)
         {
-            using var locking = await _memberNumberMutex.LockAsync();
+            using var locking = await _memberNumberMutex.LockAsync(cancellationToken);
             member.Payment!.PaidAt = _clock.GetCurrentInstant();
             if (assignNumberIfItsNot && member.Number == null)
             {
-                member.Number = await _memberNumberGenerator.GetNewMemberNumber(member);
+                member.Number = await _memberNumberGenerator.GetNewMemberNumber(
+                    member, cancellationToken: cancellationToken);
             }
 
-            await _members.UpdateAsync(member);
+            await _members.UpdateAsync(member, cancellationToken);
 
             if (notifyByEmail)
             {
                 if (member.Email != null && EmailValidator.Validate(member.Email))
                 {
-                    await _emailService.SendMembershipConfirmedMessage(member, _appConfig.DefaultCultureInfo);
+                    await _emailService.SendMembershipConfirmedMessage(
+                        member, _appConfig.DefaultCultureInfo, cancellationToken: cancellationToken);
                 }
             }
             

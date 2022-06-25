@@ -250,7 +250,7 @@ else
 			it.Member.Number.ToString()!, it.Member.Gender == Gender.Male ? "М" : "Ж"
 		});
 		var csv = TinyCsvHelper.CreateCsvContent(headers, rows);
-		await BlazorDownloadFileService.DownloadFileFromText(GetCsvFileName(), csv, Encoding.UTF8, "text/plain");
+		await BlazorDownloadFileService.DownloadFileFromText(GetCsvFileName(), csv, Encoding.UTF8, "text/csv", true);
 	}
 
 	private string GetCsvFileName()

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using OpenRace.Data.Ef;
 using OpenRace.Entities;
@@ -15,9 +16,9 @@ public class MemberNumberGenerator : IMemberNumberGenerator
     }
     
     [Pure]
-    public async Task<int> GetNewMemberNumber(Member member)
+    public async Task<int> GetNewMemberNumber(Member member, CancellationToken cancellationToken = default)
     {
-        var lastMember = await _members.GetLastMemberNumber();
+        var lastMember = await _members.GetLastMemberNumber(cancellationToken);
         return (lastMember?.Number ?? 0) + 1;
     }
 

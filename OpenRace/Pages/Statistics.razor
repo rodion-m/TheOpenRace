@@ -8,6 +8,7 @@
 @using System.Drawing
 @using System.Text
 @using BlazorDownloadFile
+@using OpenRace.Extensions
 @using OpenRace.Helpers
 
 @inherits OpenRace.Features.Auth.ComponentBaseWithSession
@@ -62,7 +63,8 @@
 		</h3>
 		<hr/>
 		<h2>Список участников</h2>
-		<button class="btn btn-primary" @onclick="DownloadAsCsv">Скачать в фоормате CSV</button>
+		<button class="btn btn-primary" @onclick="DownloadManyAsCsv">Скачать все в формате CSV</button>
+		<button class="btn btn-primary" @onclick="DownloadAllAsCsv">Скачать все в формате CSV ОДНИМ файлом</button>
 		<Table TableItem="Member" Items="data.AllMembers" PageSize="15" ColumnReorder="true">
 			<Column TableItem="Member" Title="№" Field="@(x => x.Number!)" Sortable="true" Filterable="true" Width="5%"/>
 			<Column TableItem="Member" Title="Имя" Field="@(x => x.FullName)" Sortable="true" Filterable="true" Width="30%"/>
@@ -130,7 +132,34 @@ else
 		StateHasChanged();
 	}
 
-	private async Task DownloadAsCsv()
+	private async Task DownloadManyAsCsv()
+	{
+		var files = _statisticsData!.AllMembers
+			.Where(it => it.Number is not null)
+			.OrderBy(it => it.Number)
+			.GroupBy(it => it.Distance)
+			.Select(group =>
+			{
+				var distance = group.Key;
+				var rows = group.Select(it =>
+					new string[]
+					{
+						it.Number.ToString()!, it.FullName.Trim(), it.Distance.ToString(),
+						it.Gender == Gender.Male ? "М" : "Ж"
+					});
+				return new { Distance = distance, Rows = rows};
+			});
+		
+		foreach (var file in files)
+		{
+			var csv = TinyCsvHelper.CreateCsvContent(null, file.Rows);
+			await BlazorDownloadFileService.DownloadFileFromText(
+				$"zabeg_{file.Distance}.csv", csv, Encoding.UTF8, "text/csv", true);
+		}
+	}
+
+	
+	private async Task DownloadAllAsCsv()
 	{
 		var rows = _statisticsData!.AllMembers
 			.Where(it => it.Number is not null)
@@ -138,7 +167,7 @@ else
 			.Select(it => new string[]
 			{
 				it.Number.ToString()!, it.FullName.Trim(), it.Distance.ToString(),
-				it.Gender == Gender.Male ? "М" : "Ж"
+				it.Phone ?? "", it.Email ?? "", it.Region ?? "", it.District ?? "", it.Age.ToString()
 			});
 		var csv = TinyCsvHelper.CreateCsvContent(null, rows);
 		await BlazorDownloadFileService.DownloadFileFromText("zabeg.csv", csv, Encoding.UTF8, "text/plain");

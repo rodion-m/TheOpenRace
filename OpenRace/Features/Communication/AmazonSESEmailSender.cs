@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
@@ -26,7 +27,12 @@ namespace OpenRace.Features.Communication
             _logger = logger;
             _credentials = new BasicAWSCredentials(awsSecrets.AccessKey, awsSecrets.SecretKey);
         }
-        public async Task Send(string subject, string htmlBody, string receiver)
+        
+        public async Task Send(
+            string subject, 
+            string htmlBody,
+            string receiver,
+            CancellationToken cancellationToken = default)
         {
             using var client = new AmazonSimpleEmailServiceClient(_credentials, RegionEndpoint.EUNorth1);
             var sender = $"{_appConfig.SenderName} <{_appConfig.SenderEmailAddress}>";
@@ -55,7 +61,7 @@ namespace OpenRace.Features.Communication
             };
             try
             {
-                _ = await client.SendEmailAsync(sendRequest);
+                _ = await client.SendEmailAsync(sendRequest, cancellationToken);
             }
             catch (Exception ex)
             {

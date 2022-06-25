@@ -56,7 +56,7 @@ public class PaymentCheckingBackgroundService : BackgroundService
             var paid = await IsPaymentPaidWithRetry(member, paymentService, cancellationToken);
             if (paid)
             {
-                await membersService.SetMembershipPaid(member);
+                await membersService.SetMembershipPaid(member, cancellationToken: cancellationToken);
             }
             cancellationToken.ThrowIfCancellationRequested();
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.Runtime;
@@ -32,7 +33,10 @@ namespace OpenRace.Features.Communication
             _templates = templates;
         }
         
-        public Task SendMembershipConfirmedMessage(Member member, CultureInfo cultureInfo)
+        public Task SendMembershipConfirmedMessage(
+            Member member,
+            CultureInfo cultureInfo,
+            CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(member.Email) || !EmailValidation.EmailValidator.Validate(member.Email))
             {
@@ -49,7 +53,11 @@ namespace OpenRace.Features.Communication
                 _appConfig.SiteUrl,
                 GetUnsubscribeUri(member)
             );
-            return _emailSender.Send($"Участник забега № {member.Number} {member.FullName}", html,  member.Email);
+            return _emailSender.Send(
+                $"Участник забега № {member.Number} {member.FullName}",
+                html, 
+          member.Email, 
+                cancellationToken: cancellationToken);
         }
 
         private string GetUnsubscribeUri(Member member)
