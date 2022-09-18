@@ -67,6 +67,12 @@ namespace OpenRace.Features.Communication
 
         public Task SendPaymentNotificationMessage(Member member, CultureInfo cultureInfo)
         {
+            if (member == null) throw new ArgumentNullException(nameof(member));
+            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
+            if (string.IsNullOrWhiteSpace(member.Email))
+            {
+                throw new InvalidOperationException($"{nameof(member)}.{nameof(member.Email)} is not set");
+            }
             var html = _templates.GetTemplate1Html(
                 "Напоминание" +
                 "<br/>О внесении добровольного пожертвования", 
@@ -78,7 +84,10 @@ namespace OpenRace.Features.Communication
                 _appConfig.SiteUrl,
                 GetUnsubscribeUri(member)
             );
-            return _emailSender.Send($"Напоминание о забеге для участника {member.FullName}", html,  member.Email);
+            return _emailSender.Send(
+                $"Напоминание о забеге для участника {member.FullName}", 
+                html,  
+                member.Email!);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace OpenRace.Data.Ef
@@ -13,12 +14,17 @@ namespace OpenRace.Data.Ef
             _dbContext = dbContext;
         }
 
-        public Task<bool> CanConnect() => _dbContext.Database.CanConnectAsync();
+        public Task<bool> CanConnect(CancellationToken cancellationToken = default) 
+            => _dbContext.Database.CanConnectAsync(cancellationToken);
 
-        public async Task<TimeSpan> Ping()
+        public async Task<TimeSpan> Ping(bool warmUp = true, CancellationToken cancellationToken = default)
         {
+            if (warmUp)
+            {
+                await CanConnect(cancellationToken);
+            }
             var stopwatch = Stopwatch.StartNew();
-            await CanConnect();
+            await CanConnect(cancellationToken);
             stopwatch.Stop();
             return stopwatch.Elapsed;
         }

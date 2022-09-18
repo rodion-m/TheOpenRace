@@ -75,6 +75,7 @@ public class PaymentCheckingBackgroundService : BackgroundService
                 });
         var res = await policy.ExecuteAndCaptureAsync(
             ct => paymentService.IsPaymentPaid(paymentId, ct), cancellationToken);
+        
         if (res.Outcome == OutcomeType.Failure && res.FinalException is not OperationCanceledException)
         {
             _logger.LogError(

@@ -30,21 +30,21 @@ namespace OpenRace
         static AppConfig()
         {
             var raceStartsAt = new ZonedDateTime(
-                new LocalDate(2022, 5, 28)
+                new LocalDate(2022, 10, 15)
                     .At(new LocalTime(14, 00, 00)),
                 DateTimeZoneProviders.Tzdb["Europe/Moscow"],
                 Offset.FromHours(3)
             );
             var registrationEndsAt = new ZonedDateTime(
-                new LocalDate(2022, 5, 26)
+                new LocalDate(2022, 10, 14)
                     .At(new LocalTime(18, 00, 00)),
                 DateTimeZoneProviders.Tzdb["Europe/Moscow"],
                 Offset.FromHours(3)
             );
             
             Current = new AppConfig(
-                "Забег в Перово",
-                    "https://svzabeg.ru/", 
+                "Забег в Перово", 
+                "https://svzabeg.ru/", 
                 "https://perovo-zabeg.azurewebsites.net/", //"https://panel.svzabeg.ru/",
                 raceStartsAt,
                 registrationEndsAt,
@@ -57,17 +57,17 @@ namespace OpenRace
                 true,
                 AvailableDistances: new DistanceInfo[]
                 {
-                    new(1000,
+                    new(1050,
                         new Range[] { new(1, 30), new(131, 140), new(201, 250) },
                         Color.Green,
                         "1 километр (для детей): \"семейная\""
                     ),
-                    new(2000,
+                    new(2100,
                         new Range[] { new(31, 60), new(301, 350) },
                         Color.Orange,
                         "2 километра: \"я попробую\""
                     ),
-                    new(5000,
+                    new(5250,
                         new Range[] { new(61, 100), new(501, 550) },
                         Color.DodgerBlue,
                         "5 километров: \"я смогу\""
@@ -126,14 +126,24 @@ namespace OpenRace
             Range[] Numbers, 
             Color Color, 
             string? Name,
-            int OneLapDistance = 1000)
+            int OneLapDistance = 1050)
         {
             public int LapsCount => DistanceMt / OneLapDistance;
-            public int DistanceKm => DistanceMt / 1000;
+            public string DistanceAsStringRu
+            {
+                get
+                {
+                    var km = DistanceMt / 1000;
+                    var mt = DistanceMt % 1000;
+                    return mt == 0 ? $"{km} км." : $"{km} км. {mt} м.";
+                }
+            }
         }
 
-        public DistanceInfo GetDistanceInfo(int distance) => AvailableDistances.First(it => it.DistanceMt == distance);
+        public DistanceInfo GetDistanceInfo(int distance) 
+            => AvailableDistances.First(it => it.DistanceMt == distance);
 
-        public Uri GetConfirmedPageUri(Guid memberId) => GetLink($"confirmed/{memberId}");
+        public Uri GetConfirmedPageUri(Guid memberId) 
+            => GetLink($"confirmed/{memberId}");
     }
 }

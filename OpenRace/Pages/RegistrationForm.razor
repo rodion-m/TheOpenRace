@@ -67,11 +67,11 @@
 			<tr>
 				<td>Дистанция:</td>
 				<td>
-					<InputSelect class="form-control" @bind-Value="model.DistanceKm">
+					<InputSelect class="form-control" @bind-Value="model.DistanceMt">
 						<option value="">Выбор</option>
 						@foreach (var distanceInfo in AppConfig.AvailableDistances)
 						{
-							<option value="@(distanceInfo.DistanceKm)" class="form-control">@(distanceInfo.Name)</option>
+							<option value="@(distanceInfo.DistanceMt)" class="form-control">@(distanceInfo.Name)</option>
 						}
 					</InputSelect>
 				</td>

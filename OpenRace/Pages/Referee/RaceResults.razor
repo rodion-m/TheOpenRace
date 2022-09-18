@@ -32,8 +32,7 @@
 					@foreach (var distanceInfo in AppConfig.AvailableDistances)
 					{
 						var distance = distanceInfo.DistanceMt;
-						var distanceS = $"{distance / 1000} км.";
-						<option value="@distance">@distanceS</option>
+						<option value="@distance">@(distanceInfo.DistanceAsStringRu)</option>
 					}
 				</InputSelect>
 			</td>
@@ -65,7 +64,7 @@
 	{
 		var distanceInfo = AppConfig.GetDistanceInfo(_filter.Distance!.Value);
 		<button class="btn btn-outline-primary" @onclick="ExportResultsToCsv">Сохранить результаты в таблицу CSV</button>
-		<h2>Итоги забега на @(distanceInfo.DistanceMt / 1000) км. (круги: @(distanceInfo.LapsCount))</h2>
+		<h2>Итоги забега на @(distanceInfo.DistanceAsStringRu) км. (круги: @(distanceInfo.LapsCount))</h2>
 		<Table TableItem="RaceResult" Items="results" PageSize="100" ColumnReorder="true">
 			<Column TableItem="RaceResult" Title="Место" Field="@(x => x.Position!)" Sortable="true" Filterable="true" Width="5%"/>
 			<Column TableItem="RaceResult" Title="Результат" Field="@(x => x.RaceTimeAsString)" Sortable="true" Filterable="true" Width="15%">
@@ -244,7 +243,7 @@ else
 	{
 		if (results == null) throw new NullReferenceException(nameof(results));
 		var headers = new[] { "Место", "Имя", "Результат", "Луч. круг", "№", "Пол" };
-		var rows = results.Select(it => new string[]
+		var rows = results.Select(it => new[]
 		{
 			it.Position.ToString()!, it.Member.FullName.Trim(), it.RaceTimeAsString, it.BestLapAsString, 
 			it.Member.Number.ToString()!, it.Member.Gender == Gender.Male ? "М" : "Ж"
@@ -259,12 +258,12 @@ else
 			0 => "взрослые",
 			1 => "дети",
 			_ => "все"
-			};
+		};
 		string genderRu = _filter.Gender switch {
 			Gender.Male => "М",
 			Gender.Female => "Ж",
 			_ => "МЖ"
-			};
+		};
 		return $"results_{_filter.Distance}m_{genderRu}_{childrenRu}.csv".ToLower();
 	}
 

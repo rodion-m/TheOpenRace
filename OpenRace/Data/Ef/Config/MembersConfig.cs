@@ -11,7 +11,7 @@ namespace OpenRace.Data.Ef.Config
     {
         public void Configure(EntityTypeBuilder<Member> builder)
         {
-            builder.ToTable("Members2022_5");
+            builder.ToTable("Members");
             
             builder.HasKey(ci => ci.Id);
             builder.HasIndex(ci => ci.Phone);

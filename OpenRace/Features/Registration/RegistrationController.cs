@@ -32,10 +32,10 @@ namespace OpenRace.Features.Registration
         [HttpPost]
         public async Task<IActionResult> Register([FromForm] RegistrationModel model)
         {
-            var distance = int.Parse(model.DistanceKm!) * 1000;
+            var distance = int.Parse(model.DistanceMt!);
             if (_appConfig.AvailableDistances.All(it => it.DistanceMt != distance))
             {
-                return BadRequest($"Неизвестная дистанция: {model.DistanceKm}");
+                return BadRequest($"Неизвестная дистанция: {model.DistanceMt}");
             }
 
             // var rqf = Request.HttpContext.Features.Get<IRequestCultureFeature>()!;

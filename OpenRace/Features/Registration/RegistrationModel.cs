@@ -56,7 +56,7 @@ namespace OpenRace.Features.Registration
         [Required, Range(0, int.MaxValue)]
         [Display(Name = "Дистанция")]
         [FromForm(Name = "distance")]
-        public string? DistanceKm { get; set; }
+        public string? DistanceMt { get; set; }
 
         [Display(Name = "Как узнали о забеге")]
         [FromForm(Name = "referer")]

@@ -10,7 +10,7 @@ public class MemberNumberGenerator : IMemberNumberGenerator
 {
     private readonly MembersRepository _members;
 
-    public MemberNumberGenerator(MembersRepository members, AppConfig appConfig)
+    public MemberNumberGenerator(MembersRepository members)
     {
         _members = members;
     }

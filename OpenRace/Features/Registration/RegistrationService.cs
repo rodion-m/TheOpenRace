@@ -135,7 +135,7 @@ namespace OpenRace.Features.Registration
                 phone,
                 model.Age,
                 Enum.Parse<Gender>(model.Gender!),
-                int.Parse(model.DistanceKm!) * 1000,
+                int.Parse(model.DistanceMt!),
                 model.Referer,
                 model.RegisteredBy,
                 $"{model.ParentLastName} {model.ParentFirstName} {model.ParentPatronymicName}",

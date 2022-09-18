@@ -42,7 +42,7 @@
 			@foreach (var distanceInfo in AppConfig.AvailableDistances.Cast<AppConfig.DistanceInfo?>().Append(null))
 			{
 				var distance = distanceInfo?.DistanceMt;
-				var distanceS = distance != null ? $"{distance / 1000} км." : "Всего";
+				var distanceS = distanceInfo?.DistanceAsStringRu ?? "Всего";
 				var color = ColorTranslator.ToHtml(distanceInfo?.Color ?? Color.White);
 				<tr>
 					<th scope="row" style="background-color: @color">@distanceS</th>
@@ -142,7 +142,7 @@ else
 			{
 				var distance = group.Key;
 				var rows = group.Select(it =>
-					new string[]
+					new[]
 					{
 						it.Number.ToString()!, it.FullName.Trim(), it.Distance.ToString(),
 						it.Gender == Gender.Male ? "М" : "Ж"
@@ -164,7 +164,7 @@ else
 		var rows = _statisticsData!.AllMembers
 			.Where(it => it.Number is not null)
 			.OrderBy(it => it.Number)
-			.Select(it => new string[]
+			.Select(it => new[]
 			{
 				it.Number.ToString()!, it.FullName.Trim(), it.Distance.ToString(),
 				it.Phone ?? "", it.Email ?? "", it.Region ?? "", it.District ?? "", it.Age.ToString()

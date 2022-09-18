@@ -12,7 +12,9 @@ namespace OpenRace.BackgroundServices
         private readonly ConnectionChecker _checker;
         private readonly ILogger<CheckConnectionBackgroundService> _logger;
 
-        public CheckConnectionBackgroundService(ConnectionChecker checker, ILogger<CheckConnectionBackgroundService> logger)
+        public CheckConnectionBackgroundService(
+            ConnectionChecker checker, 
+            ILogger<CheckConnectionBackgroundService> logger)
         {
             _checker = checker;
             _logger = logger;
@@ -20,10 +22,10 @@ namespace OpenRace.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var canConnect = await _checker.CanConnect();
+            var canConnect = await _checker.CanConnect(stoppingToken);
             if (canConnect)
             {
-                var ping = await _checker.Ping();
+                var ping = await _checker.Ping(cancellationToken: stoppingToken);
                 _logger.LogInformation("!!! Db connected. Ping: {Ping:N0} ms. !!!", ping.TotalMilliseconds);
             }
             else

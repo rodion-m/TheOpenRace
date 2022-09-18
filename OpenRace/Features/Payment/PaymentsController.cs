@@ -15,15 +15,15 @@ namespace OpenRace.Features.Payment
         private readonly PaymentService _paymentService;
         private readonly ILogger<PaymentsController> _logger;
         private readonly RegistrationService _registrationService;
-        private readonly AppConfig _appConfig;
 
         public PaymentsController(
-            PaymentService paymentService, ILogger<PaymentsController> logger, EmailService emailService, RegistrationService registrationService, AppConfig appConfig)
+            PaymentService paymentService,
+            ILogger<PaymentsController> logger,
+            RegistrationService registrationService)
         {
             _paymentService = paymentService;
             _logger = logger;
             _registrationService = registrationService;
-            _appConfig = appConfig;
         }
         
         [HttpPost("Notify")]
