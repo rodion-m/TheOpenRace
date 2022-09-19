@@ -78,9 +78,9 @@
 					<a href="tel:@context.Phone">@context.Phone</a>
 				</Template>
 			</Column>
-			<Column TableItem="Member" Title="Дистанция (км)" Field="@(x => x.Distance)" Sortable="true" Filterable="true" Width="10%" Format="N0">
+			<Column TableItem="Member" Title="Дистанция" Field="@(x => x.Distance)" Sortable="true" Filterable="true" Width="10%" Format="N0">
 				<Template>
-					<span>@(context.DistanceInKm)</span>
+					<span>@(context.DistanceAsStringRu)</span>
 				</Template>
 			</Column>
 			<Column TableItem="Member" Title="Возраст" Field="@(x => x.Age)" Sortable="true" Filterable="true" Width="10%"/>

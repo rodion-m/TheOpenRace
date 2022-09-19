@@ -85,7 +85,8 @@ namespace OpenRace.Entities
         [MetaEntityAttr(Enabled = false)]
         public Payment? Payment { get; set; }
 
-        public string DistanceInKm => (Distance / 1000).ToString();
+        public string DistanceAsStringRu 
+            => AppConfig.DistanceInfo.DistanceInMetersToStringRu(Distance);
         
         public bool IsChild() => Age < AdultsAge;
         public bool IsAdult() => Age >= AdultsAge;

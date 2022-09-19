@@ -48,7 +48,7 @@ namespace OpenRace.Features.Communication
                 $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
                 $"Имя участника: {member.FullName}" 
                 + $"<br/>Вы бежите под номером: {member.Number}"
-                + $"<br/>Дистанция: {member.DistanceInKm} км.",
+                + $"<br/>Дистанция: {member.DistanceAsStringRu}",
                 "Ждем вас!",
                 _appConfig.SiteUrl,
                 GetUnsubscribeUri(member)

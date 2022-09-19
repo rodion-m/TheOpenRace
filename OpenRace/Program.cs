@@ -65,7 +65,6 @@ namespace OpenRace
                     rollingInterval: RollingInterval.Day
                 );
 #if !DEBUG
-            // ReSharper disable once HeapView.ClosureAllocation
             var secrets = AppSecrets.GetInstance();
             conf.WriteTo.Sentry(s =>
                 {

@@ -129,14 +129,13 @@ namespace OpenRace
             int OneLapDistance = 1050)
         {
             public int LapsCount => DistanceMt / OneLapDistance;
-            public string DistanceAsStringRu
+            public string DistanceAsStringRu => DistanceInMetersToStringRu(DistanceMt);
+
+            public static string DistanceInMetersToStringRu(int distance)
             {
-                get
-                {
-                    var km = DistanceMt / 1000;
-                    var mt = DistanceMt % 1000;
-                    return mt == 0 ? $"{km} км." : $"{km} км. {mt} м.";
-                }
+                var km = distance / 1000;
+                var mt = distance % 1000;
+                return mt == 0 ? $"{km} км." : $"{km} км. {mt} м.";
             }
         }
 
