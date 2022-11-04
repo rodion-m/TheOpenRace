@@ -47,7 +47,7 @@ namespace OpenRace.Features.Communication
                 "<br/>Участие в забеге подтверждено!", 
                 $"Дата и время: {_appConfig.GetRaceDateTimeAsString(cultureInfo)}", 
                 $"Имя участника: {member.FullName}" 
-                + $"<br/>Вы бежите под номером: {member.Number}"
+                + $"<br/>Вы бежите под номером: <strong>{member.Number}</strong>"
                 + $"<br/>Дистанция: {member.DistanceAsStringRu}",
                 "Ждем вас!",
                 _appConfig.SiteUrl,
