@@ -90,6 +90,7 @@ namespace OpenRace
             services.AddSingleton(AppConfig.Current);
             services.AddSingleton(secrets.YouKassaSecrets);
             services.AddSingleton(secrets.AwsSecrets);
+            services.AddSingleton(secrets.AuthConfig);
             services.AddSingleton<ConnectionChecker>();
             services.AddSingleton<RaceEventsSubscriptionManager>();
             services.AddSingleton<RaceEventsCache>();

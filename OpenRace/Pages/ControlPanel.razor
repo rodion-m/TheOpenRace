@@ -17,7 +17,7 @@
 
 <h1>Панель управления</h1>
 
-@if (Session.IsAuthorized())
+@if (SessionService.IsAuthorized())
 {
 	<EditForm Model="model" OnSubmit="SetMembershipPaid">
 		Email: <InputText @bind-Value="model.Email"></InputText>

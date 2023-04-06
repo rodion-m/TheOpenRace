@@ -20,7 +20,7 @@
 
 <h1>Статистика</h1>
 
-@if (Session.IsAdmin())
+@if (SessionService.IsAdmin())
 {
 	if (_statisticsData is { } data)
 	{

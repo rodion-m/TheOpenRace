@@ -16,9 +16,9 @@
 @inject IToastService ToastService
 @inject IClock Clock
 
-@if (Session.IsAuthorized())
+@if (SessionService.IsAuthorized())
 {
-	if (Session.IsAdmin())
+	if (SessionService.IsAdmin())
 	{
 		<h1>Управление забегом</h1>
 		<table>
@@ -57,7 +57,7 @@
 		}
 	</table>
 
-	if (Session.IsAdmin())
+	if (SessionService.IsAdmin())
 	{
 		<hr/>
 		<hr/>
@@ -110,7 +110,7 @@ else
 		{
 			StateHasChanged();
 			ToastService.ShowInfo("Запускаем взрослых...");
-			var members = await MembersRepo.GetAdults().ToListAsync();
+			var members = await MembersRepo.GetAdults();
 			await StartMembers(members);
 		}
 		finally
@@ -127,7 +127,7 @@ else
 		{
 			StateHasChanged();
 			ToastService.ShowInfo("Запускаем детей...");
-			var members = await MembersRepo.GetChildren().ToListAsync();
+			var members = await MembersRepo.GetChildren();
 			await StartMembers(members);
 		}
 		finally
@@ -137,7 +137,7 @@ else
 		}
 	}
 
-	private async Task StartMembers(List<Member> members)
+	private async Task StartMembers(IReadOnlyCollection<Member> members)
 	{
 		var now = Clock.GetCurrentInstant();
 		var events = members.Select(member => new RaceEvent(
@@ -146,7 +146,7 @@ else
 			member.Number.GetValueOrDefault(), 
 			EventType.RaceStarted, 
 			now, 
-			Session.UserName, 
+			Account.UserName, 
 			member.Distance)
 		);
 		await EventsRepo.AddAll(events);
@@ -161,14 +161,15 @@ else
 			AppConfig.RaceId, EventType.RaceStarted, EventType.RaceFinished)
 			.ToLookupAsync(it => it.MemberNumber);
 		var now = Clock.GetCurrentInstant();
-		var raceFinishedEvents = events.Where(it => !it.Any(e => e.EventType == EventType.RaceFinished))
+		var raceFinishedEvents = events
+			.Where(it => it.All(e => e.EventType != EventType.RaceFinished))
 			.Select(it => new RaceEvent(
 				Guid.NewGuid(), 
 				AppConfig.RaceId, 
 				it.Key,
 				EventType.RaceFinished, 
 				now, 
-				Session.UserName, 
+				Account.UserName, 
 				it.First().Distance
 				)
 			);

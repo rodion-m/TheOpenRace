@@ -103,7 +103,7 @@ namespace OpenRace.Pages.Referee
         {
             if (_disposed) return;
             if (_membersLaps == null) return;
-            if (@event.CreatorName == Session.UserName) return;
+            if (@event.CreatorName == Account.UserName) return;
             if (_membersLaps.Any(it => it.MemberNumber == @event.MemberNumber))
             {
                 if (!_disposed) InvokeAsync(UpdateRunners);
@@ -114,7 +114,7 @@ namespace OpenRace.Pages.Referee
         {
             if (_disposed) return;
             if (_membersLaps == null) return;
-            if (@event.CreatorName == Session.UserName) return;
+            if (@event.CreatorName == Account.UserName) return;
             if (_membersLaps.Any(it => it.MemberNumber == @event.MemberNumber))
             {
                 if (!_disposed) InvokeAsync(UpdateRunners);
@@ -218,7 +218,7 @@ namespace OpenRace.Pages.Referee
                     lapEvent.MemberNumber,
                     EventType.LapCompleted,
                     timeStamp.Value,
-                    Session.UserName,
+                    Account.UserName,
                     Distance
                 );
                 var remainingLaps = _distanceInfo.LapsCount - lapEvent.NextLap;
@@ -231,7 +231,7 @@ namespace OpenRace.Pages.Referee
                         lapEvent.MemberNumber,
                         EventType.RaceFinished,
                         timeStamp.Value.Plus(Duration.FromMilliseconds(1)),
-                        Session.UserName,
+                        Account.UserName,
                         Distance
                     ));
                 }
@@ -292,7 +292,7 @@ namespace OpenRace.Pages.Referee
                 _busy = true;
                 ToastService.ShowWarning("Отмена последнего действия...");
                 LockButtons();
-                var @event = await RaceEventsManager.GetLastEventByCreatorOrNull(Session.UserName);
+                var @event = await RaceEventsManager.GetLastEventByCreatorOrNull(Account.UserName);
                 if (@event == null || @event.EventType == EventType.RaceStarted)
                 {
                     ToastService.ShowError("Нет действий");

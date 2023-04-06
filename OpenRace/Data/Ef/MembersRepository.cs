@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,11 +15,11 @@ namespace OpenRace.Data.Ef
         {
         }
 
-        public IAsyncEnumerable<Member> GetAdults() 
-            => _dbContext.Members.AsQueryable().Where(it => it.Age >= Member.AdultsAge).AsAsyncEnumerable();
+        public Task<List<Member>> GetAdults() 
+            => _dbContext.Members.Where(it => it.Age >= Member.AdultsAge).ToListAsync();
         
-        public IAsyncEnumerable<Member> GetChildren() 
-            => _dbContext.Members.AsQueryable().Where(it => it.Age < Member.AdultsAge).AsAsyncEnumerable();
+        public Task<List<Member>> GetChildren() 
+            => _dbContext.Members.Where(it => it.Age < Member.AdultsAge).ToListAsync();
 
         // public override Task AddOrUpdateAsync(Member entity, CancellationToken cancellationToken = default)
         // {

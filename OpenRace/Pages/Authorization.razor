@@ -18,16 +18,16 @@
 
 <h1>Авторизация</h1>
 
-@if (Session.IsAuthorized())
+@if (SessionService.IsAuthorized())
 {
-	<h2 style="color: green">Вы авторизованы как @(Session.UserName)</h2>
+	<h2 style="color: green">Вы авторизованы как @(Account.UserName)</h2>
 	<button class="btn-danger" @onclick="Logout">Выход</button>
 } else {
 
-	<EditForm Model="model" OnSubmit="TryLogin">
+	<EditForm Model="_model" OnSubmit="TryLogin">
 		<table>
-			<tr><td>Пользователь:</td> <td><InputText @bind-Value="model.UserName"></InputText></td></tr>
-			<tr><td>Пароль:</td> <td><InputText @bind-Value="model.Password"></InputText></td></tr>
+			<tr><td>Пользователь:</td> <td><InputText @bind-Value="_model.UserName"></InputText></td></tr>
+			<tr><td>Пароль:</td> <td><InputText @bind-Value="_model.Password"></InputText></td></tr>
 			<tr><td colspan="2"><input class="btn btn-success" type="submit" value="Войти"></td></tr>
 		</table>
 	</EditForm>
@@ -40,14 +40,12 @@
 		public string Password { get; set; } = "";
 	}
 
-	readonly Model model = new();
+	readonly Model _model = new();
 
 	private async Task TryLogin()
 	{
-		var session = new Session(model.UserName, model.Password);
-		if (session.IsAuthorized())
+		if (await SessionService.Auth(_model.UserName, _model.Password))
 		{
-			await SetSession(session);
 			ToastService.ShowSuccess("Успешная авторизация");
 			//NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
 		}

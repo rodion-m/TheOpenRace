@@ -44,6 +44,7 @@ namespace OpenRace.Entities
 
         [MetaEntityAttr(Index = int.MaxValue, Editable = false, ShowOnView = false)]
         public Guid Id { get; init; }
+        
         [MetaEntityAttr(Enabled = false)]
         public Instant CreatedAt { get; set; }
 

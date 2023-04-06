@@ -21,7 +21,7 @@
 
 <h1>Участники @(_distanceInfo.DistanceAsStringRu)</h1>
 
-@if (Session.IsAuthorized())
+@if (SessionService.IsAuthorized())
 {
 	if (_membersLaps != null)
 	{

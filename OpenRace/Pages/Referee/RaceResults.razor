@@ -20,7 +20,7 @@
 
 <h1>Результаты забега</h1>
 
-@if (Session.IsAuthorized())
+@if (SessionService.IsAuthorized())
 {
 	<EditForm Model="_filter" OnSubmit="UpdateFilter">
 	<table>

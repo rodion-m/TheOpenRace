@@ -56,8 +56,9 @@ namespace OpenRace.Features.Communication
             return _emailSender.Send(
                 $"Участник забега № {member.Number} {member.FullName}",
                 html, 
-          member.Email, 
-                cancellationToken: cancellationToken);
+                member.Email, 
+                cancellationToken: cancellationToken
+            );
         }
 
         private string GetUnsubscribeUri(Member member)

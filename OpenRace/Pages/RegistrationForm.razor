@@ -13,7 +13,7 @@
 
 <h2>Регистрация на забег в поддержку детей нуждающихся в лечении</h2>
 <h5>ПО ВСЕМ ВОПРОСАМ ОБРАЩАТЬСЯ ПО ТЕЛЕФОНУ: <a href="tel:+79645522761">8-964-552-27-61</a> Дмитрий</h5>
-@if (Session.IsAuthorized())
+@if (SessionService.IsAuthorized())
 {
 	<EditForm Model="@model" OnValidSubmit="@HandleValidSubmit">
 		<DataAnnotationsValidator/>
@@ -108,9 +108,9 @@ else
 		{
 			_busy = true;
 			ToastService.ShowInfo("Регистрация...");
-			if (Session.IsAuthorized())
+			if (SessionService.IsAuthorized())
 			{
-				model.RegisteredBy = Session.UserName;
+				model.RegisteredBy = Account.UserName;
 			}
 			var redirectUri = await RegistrationService.RegisterOrUpdate(model);
 			NavigationManager.NavigateTo(redirectUri.ToString());
@@ -124,7 +124,7 @@ else
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
 		await base.OnAfterRenderAsync(firstRender);
-		if (!Session.IsAuthorized())
+		if (!SessionService.IsAuthorized())
 		{
 			OpenSite();
 		}

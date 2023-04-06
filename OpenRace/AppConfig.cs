@@ -29,16 +29,17 @@ namespace OpenRace
 
         static AppConfig()
         {
+            var timeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"];
             var raceStartsAt = new ZonedDateTime(
                 new LocalDate(2022, 10, 15)
                     .At(new LocalTime(14, 00, 00)),
-                DateTimeZoneProviders.Tzdb["Europe/Moscow"],
+                timeZone,
                 Offset.FromHours(3)
             );
             var registrationEndsAt = new ZonedDateTime(
                 new LocalDate(2022, 10, 14)
                     .At(new LocalTime(18, 00, 00)),
-                DateTimeZoneProviders.Tzdb["Europe/Moscow"],
+                timeZone,
                 Offset.FromHours(3)
             );
             
@@ -52,7 +53,7 @@ namespace OpenRace
                 new LocalTime(12, 0),
                 "Фонд храма св. Владимира",
                 "info@svzabeg.ru",
-                new Guid("82ECE55A-EC6E-46AA-99B6-C8ED3B34D835"),
+                new Guid("C82422B4-FD01-483E-8641-B3992C973F0E"),
                 DefaultCultureInfo: new CultureInfo("ru"),
                 true,
                 AvailableDistances: new DistanceInfo[]

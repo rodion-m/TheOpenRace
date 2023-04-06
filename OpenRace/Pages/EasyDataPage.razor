@@ -9,7 +9,7 @@
 
 <h1>Редактор</h1>
 
-@if (Session.IsAdmin())
+@if (SessionService.IsAdmin())
 {
     <div class="container">
         <div id="EasyDataContainer"></div>
@@ -29,7 +29,7 @@ else
     protected override async Task OnAuthorizedAsync()
     {
         await base.OnAuthorizedAsync();
-        if (Session.IsAdmin())
+        if (SessionService.IsAdmin())
         {
             await JSRuntime.InvokeVoidAsync("runEasyData");
             _easyDataInitialized = true;

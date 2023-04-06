@@ -8,17 +8,16 @@ namespace OpenRace.Features.Auth
         [Inject]
         protected SessionService SessionService { get; set; } = null!;
 
-        private Session? _session;
-        protected Session Session => _session ?? Session.Empty;
+        protected Account Account => SessionService.Current;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             await base.OnAfterRenderAsync(firstRender);
             if (firstRender)
             {
-                _session = await SessionService.Get();
+                await SessionService.LoadFromLocalStorage();
                 StateHasChanged();
-                if (_session.IsAuthorized())
+                if (SessionService.IsAuthorized())
                 {
                     await OnAuthorizedAsync();
                 }
@@ -30,12 +29,5 @@ namespace OpenRace.Features.Auth
             return Task.CompletedTask;
         }
 
-        protected async Task SetSession(Session session, bool updateState = true)
-        {
-            _session = session;
-            if(updateState)
-                StateHasChanged();
-            await SessionService.Set(session);
-        }
     }
 }
