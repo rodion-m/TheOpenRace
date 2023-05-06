@@ -13,22 +13,22 @@ namespace OpenRace.Data.Ef
     // See: https://github.com/ardalis/Specification/blob/main/Specification.EntityFrameworkCore/src/Ardalis.Specification.EntityFrameworkCore/RepositoryBaseOfT.cs
     public class EfRepository<TEntity> where TEntity : class, IEntity
     {
-        protected readonly AppDbContext _dbContext;
-        private readonly ISpecificationEvaluator specificationEvaluator = SpecificationEvaluator.Default;
+        protected readonly AppDbContext DbContext;
+        private readonly ISpecificationEvaluator _specificationEvaluator = SpecificationEvaluator.Default;
 
         public EfRepository(AppDbContext dbContext)
         {
-            _dbContext = dbContext;
+            DbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
         public virtual Task<TEntity> GetById(Guid id, CancellationToken cancellationToken = default)
         {
-            return _dbContext.Set<TEntity>().FirstAsync(it => it.Id == id, cancellationToken);
+            return DbContext.Set<TEntity>().FirstAsync(it => it.Id == id, cancellationToken);
         }
 
         public virtual IAsyncEnumerable<TEntity> AllAsync()
         {
-            return _dbContext.Set<TEntity>().AsAsyncEnumerable();
+            return DbContext.Set<TEntity>().AsAsyncEnumerable();
         }
 
         public virtual async Task<int> CountAsync(ISpecification<TEntity> spec, CancellationToken cancellationToken = default)
@@ -39,8 +39,8 @@ namespace OpenRace.Data.Ef
 
         public virtual async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            await _dbContext.Set<TEntity>().AddAsync(entity, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await DbContext.Set<TEntity>().AddAsync(entity, cancellationToken);
+            await DbContext.SaveChangesAsync(cancellationToken);
 
             return entity;
         }
@@ -48,26 +48,26 @@ namespace OpenRace.Data.Ef
         //https://entityframework-plus.net/batch-update
         public virtual async Task UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            _dbContext.Entry(entity).State = EntityState.Modified;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            DbContext.Entry(entity).State = EntityState.Modified;
+            await DbContext.SaveChangesAsync(cancellationToken);
         }
         
         public async Task AddAll(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
         {
-            await _dbContext.AddRangeAsync(entities, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await DbContext.AddRangeAsync(entities, cancellationToken);
+            await DbContext.SaveChangesAsync(cancellationToken);
         }
         
         public virtual async Task AddOrUpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            _dbContext.Entry(entity).State = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            DbContext.Entry(entity).State = entity.Id == Guid.Empty ? EntityState.Added : EntityState.Modified;
+            await DbContext.SaveChangesAsync(cancellationToken);
         }
 
         public virtual async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            _dbContext.Set<TEntity>().Remove(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            DbContext.Set<TEntity>().Remove(entity);
+            await DbContext.SaveChangesAsync(cancellationToken);
         }
 
         public virtual async Task<TEntity> FirstAsync(ISpecification<TEntity> spec, CancellationToken cancellationToken = default)
@@ -85,7 +85,7 @@ namespace OpenRace.Data.Ef
 
         protected virtual IQueryable<TEntity> ApplySpecification(ISpecification<TEntity> specification, bool evaluateCriteriaOnly = false)
         {
-            return specificationEvaluator.GetQuery(_dbContext.Set<TEntity>().AsQueryable(), specification, evaluateCriteriaOnly);
+            return _specificationEvaluator.GetQuery(DbContext.Set<TEntity>().AsQueryable(), specification, evaluateCriteriaOnly);
         }
         
         /// <summary>
@@ -103,7 +103,7 @@ namespace OpenRace.Data.Ef
             if (specification is null) throw new ArgumentNullException(nameof(specification));
             if (specification.Selector is null) throw new SelectorNotFoundException();
 
-            return specificationEvaluator.GetQuery(_dbContext.Set<TEntity>().AsQueryable(), specification);
+            return _specificationEvaluator.GetQuery(DbContext.Set<TEntity>().AsQueryable(), specification);
         }
     }
 }

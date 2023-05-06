@@ -14,31 +14,31 @@ namespace OpenRace.Data.Ef
         }
 
         public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId)
-            => _dbContext.Events.AsQueryable()
+            => DbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId)
                 .OrderBy(it => it.TimeStamp)
                 .AsAsyncEnumerable();
 
         public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, int distance)
-            => _dbContext.Events.AsQueryable()
+            => DbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId && it.Distance == distance)
                 .OrderBy(it => it.EventType)
                 .ThenBy(it => it.TimeStamp)
                 .AsAsyncEnumerable();
 
         public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, EventType eventType)
-            => _dbContext.Events.AsQueryable()
+            => DbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId && it.EventType == eventType)
                 .AsAsyncEnumerable();
 
         public IAsyncEnumerable<RaceEvent> GetRaceEvents(Guid raceId, EventType eventType1, EventType eventType2)
-            => _dbContext.Events.AsQueryable()
+            => DbContext.Events.AsQueryable()
                 .Where(it => it.RaceId == raceId && (it.EventType == eventType1 || it.EventType == eventType2))
                 .AsAsyncEnumerable();
 
         public Task<RaceEvent?> GetLastEventByCreatorOrNull(string creatorName)
         {
-            return _dbContext.Events.AsQueryable()
+            return DbContext.Events.AsQueryable()
                 .Where(it => it.CreatorName == creatorName)
                 .OrderByDescending(it => it.TimeStamp)
                 .FirstOrDefaultAsync();
@@ -78,7 +78,7 @@ namespace OpenRace.Data.Ef
             //         keySelector: ti => ti.Outer,
             //         elementSelector: ti => ti.Inner)' could not be translated. 
 
-            var q = _dbContext.Members.AsQueryable();
+            var q = DbContext.Members.AsQueryable();
             if (gender != null) q = q.Where(it => it.Gender == gender);
             if (children == false) q = q.Where(it => it.Age >= Member.AdultsAge);
             else if (children == true) q = q.Where(it => it.Age < Member.AdultsAge);
@@ -93,8 +93,8 @@ namespace OpenRace.Data.Ef
         public async Task DeleteEvents(Guid raceId)
         {
             var events = await GetRaceEvents(raceId).ToListAsync();
-            await _dbContext.BulkDeleteAsync(events);
-            await _dbContext.SaveChangesAsync();
+            await DbContext.BulkDeleteAsync(events);
+            await DbContext.SaveChangesAsync();
         }
     }
 }

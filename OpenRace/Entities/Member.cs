@@ -82,6 +82,8 @@ namespace OpenRace.Entities
         [MetaEntityAttr(Enabled = false)]
         public Instant? PaymentNotificationSentAt { get; set; }
 
+        public Guid PaymentId { get; set; }
+        
         //https://entityframeworkcore.com/knowledge-base/53063181/ef-core-database-specific-columns-to-nested-object
         [MetaEntityAttr(Enabled = false)]
         public Payment? Payment { get; set; }

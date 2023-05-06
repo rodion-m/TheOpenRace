@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NodaTime;
-using OpenRace.Data;
 using OpenRace.Data.Ef;
-using OpenRace.Data.GSL;
 using OpenRace.Data.GSL.Abstractions;
 using OpenRace.Entities;
-using OpenRace.Exceptions;
 using OpenRace.Features.Payment;
 using OpenRace.Features.Registration;
 using Polly;

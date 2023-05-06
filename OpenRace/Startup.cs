@@ -1,4 +1,3 @@
-using System;
 using BlazorDownloadFile;
 using Blazored.Toast;
 using BlazorPro.BlazorSize;
@@ -7,6 +6,7 @@ using Coravel;
 using EasyData.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +46,13 @@ namespace OpenRace
             {
                 opts.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
             });
+            
+            // services.Configure<RouteOptions>(options =>
+            // {
+            //     options.ConstraintMap.Add("ignoreApi", typeof(IgnoreApiRouteConstraint));
+            // });
+
+            services.AddControllers();
 
             var secrets = AppSecrets.GetInstance();
 
@@ -140,13 +147,13 @@ namespace OpenRace
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllers();
                 endpoints.MapEasyData(options =>
                 {
                     options.UseDbContext<AppDbContext>();
                 });
                 endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
-                endpoints.MapControllers();
+                endpoints.MapFallbackToPage("{Page=Home}", "/_Host");
             });
         }
 

@@ -11,7 +11,7 @@ namespace OpenRace.Data.Ef
 
         public ConnectionChecker(ConnectionContext dbContext)
         {
-            _dbContext = dbContext;
+            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
         public Task<bool> CanConnect(CancellationToken cancellationToken = default) 

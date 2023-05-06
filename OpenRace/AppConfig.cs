@@ -31,14 +31,14 @@ namespace OpenRace
         {
             var timeZone = DateTimeZoneProviders.Tzdb["Europe/Moscow"];
             var raceStartsAt = new ZonedDateTime(
-                new LocalDate(2022, 10, 15)
+                new LocalDate(2023, 05, 13)
                     .At(new LocalTime(14, 00, 00)),
                 timeZone,
                 Offset.FromHours(3)
             );
             var registrationEndsAt = new ZonedDateTime(
-                new LocalDate(2022, 10, 14)
-                    .At(new LocalTime(18, 00, 00)),
+                new LocalDate(2023, 05, 12)
+                    .At(new LocalTime(17, 00, 00)),
                 timeZone,
                 Offset.FromHours(3)
             );

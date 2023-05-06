@@ -1,8 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using OpenRace.Features.Communication;
 using OpenRace.Features.Registration;
 
 namespace OpenRace.Features.Payment
@@ -21,9 +21,9 @@ namespace OpenRace.Features.Payment
             ILogger<PaymentsController> logger,
             RegistrationService registrationService)
         {
-            _paymentService = paymentService;
-            _logger = logger;
-            _registrationService = registrationService;
+            _paymentService = paymentService ?? throw new ArgumentNullException(nameof(paymentService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _registrationService = registrationService ?? throw new ArgumentNullException(nameof(registrationService));
         }
         
         [HttpPost("Notify")]

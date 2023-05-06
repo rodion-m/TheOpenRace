@@ -43,7 +43,7 @@ else
 	public string? Id { get; init; }
 
 	public string? ErrorText { get; set; }
-	private Member? _member { get; set; }
+	private Member? _member;
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{

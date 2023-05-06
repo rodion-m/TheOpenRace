@@ -16,10 +16,10 @@ namespace OpenRace.Data.Ef
         }
 
         public Task<List<Member>> GetAdults() 
-            => _dbContext.Members.Where(it => it.Age >= Member.AdultsAge).ToListAsync();
+            => DbContext.Members.Where(it => it.Age >= Member.AdultsAge).ToListAsync();
         
         public Task<List<Member>> GetChildren() 
-            => _dbContext.Members.Where(it => it.Age < Member.AdultsAge).ToListAsync();
+            => DbContext.Members.Where(it => it.Age < Member.AdultsAge).ToListAsync();
 
         // public override Task AddOrUpdateAsync(Member entity, CancellationToken cancellationToken = default)
         // {
@@ -30,7 +30,7 @@ namespace OpenRace.Data.Ef
 
         public Task<Member?> GetLastPaidMemberOrNull()
         {
-            return _dbContext.Members.Where(it => it.Number != null)
+            return DbContext.Members.Where(it => it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync();
@@ -38,7 +38,7 @@ namespace OpenRace.Data.Ef
         
         public async Task<IReadOnlyList<Member>> GetUnpaidMembers(CancellationToken cancellationToken = default)
         {
-            return await _dbContext.Members.Where(it => it.Payment!.PaidAt == null)
+            return await DbContext.Members.Where(it => it.Payment!.PaidAt == null)
                 .OrderByDescending(it => it.CreatedAt)
                 .Include(it => it.Payment)
                 .ToListAsync(cancellationToken: cancellationToken);
@@ -46,7 +46,7 @@ namespace OpenRace.Data.Ef
         
         public Task<Member?> GetLastMemberNumberByDistance(int distance, CancellationToken cancellationToken = default)
         {
-            return _dbContext.Members.Where(it => it.Distance == distance && it.Number != null)
+            return DbContext.Members.Where(it => it.Distance == distance && it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync(cancellationToken: cancellationToken);
@@ -54,7 +54,7 @@ namespace OpenRace.Data.Ef
         
         public Task<Member?> GetLastMemberNumber(CancellationToken cancellationToken = default)
         {
-            return _dbContext.Members.Where(it => it.Number != null)
+            return DbContext.Members.Where(it => it.Number != null)
                 .OrderByDescending(it => it.Number)
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync(cancellationToken: cancellationToken);
@@ -62,21 +62,21 @@ namespace OpenRace.Data.Ef
         
         public override Task<Member> GetById(Guid id, CancellationToken cancellationToken = default)
         {
-            return _dbContext.Members
+            return DbContext.Members
                 .Include(it => it.Payment)
                 .FirstAsync(it => it.Id == id, cancellationToken);
         }
         
         public Task<Member?> GetByIdOrNull(Guid id, CancellationToken cancellationToken = default)
         {
-            return _dbContext.Members
+            return DbContext.Members
                 .Include(it => it.Payment)
                 .FirstOrDefaultAsync(it => it.Id == id, cancellationToken);
         }
 
         public IAsyncEnumerable<Member> GetSubscribedMembers()
         {
-            return _dbContext.Members.Where(it => it.Subscribed).ToAsyncEnumerable();
+            return DbContext.Members.Where(it => it.Subscribed).ToAsyncEnumerable();
         }
     }
 }

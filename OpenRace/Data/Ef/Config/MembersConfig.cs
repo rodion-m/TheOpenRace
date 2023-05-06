@@ -17,6 +17,7 @@ namespace OpenRace.Data.Ef.Config
             builder.HasIndex(ci => ci.Phone);
             builder.HasIndex(ci => ci.Email);
             builder.HasIndex(ci => ci.FullName);
+            builder.Navigation(it => it.Payment).AutoInclude();
         }
     }
 }
