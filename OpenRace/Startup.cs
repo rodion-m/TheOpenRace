@@ -6,7 +6,6 @@ using Coravel;
 using EasyData.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +23,6 @@ using OpenRace.Data.GSL.Abstractions;
 using OpenRace.Features.RaceEvents;
 using OpenRace.Jobs;
 using OpenRace.ServicesConfigs;
-using Sentry.AspNetCore;
 using Serilog;
 
 namespace OpenRace
